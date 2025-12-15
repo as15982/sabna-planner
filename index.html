@@ -270,6 +270,31 @@
         }
       ];
 
+      const INITIAL_EXPENSES = [];
+
+      const INITIAL_SHOPPING_LOCATIONS = [
+        { id: 'sl-1', name: 'Wisma Merdeka', description: '最佳換匯地點，也有賣紀念品', type: '換匯 & 紀念品', googleMapQuery: 'Wisma Merdeka Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1574902998399-56d11bd85721?q=80&w=500' },
+        { id: 'sl-2', name: 'Imago Shopping Mall', description: '亞庇最大商場，必買 Padini, Bata, Fipper, Eureka', type: '購物中心', googleMapQuery: 'Imago Shopping Mall Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1519567241046-7f570eee3d9f?q=80&w=500' },
+        { id: 'sl-3', name: 'Gaya Street Market', description: '週日市集 / 週五六夜市，手工藝品多', type: '當地市集', googleMapQuery: 'Gaya Street Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?q=80&w=500' },
+        { id: 'sl-4', name: 'Suria Sabah', description: '位於海邊的購物中心，有無敵海景，超市好買', type: '購物中心', googleMapQuery: 'Suria Sabah Shopping Mall', imageUrl: 'https://images.unsplash.com/photo-1555529733-0e670560f7e1?q=80&w=500' },
+        { id: 'sl-5', name: 'KK Plaza', description: '地下室超市便宜，適合買伴手禮', type: '超市', googleMapQuery: 'KK Plaza Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1604719312566-b7e6012e6b17?q=80&w=500' }
+      ];
+
+      const INITIAL_SHOPPING_ITEMS = [
+        { id: 'si-1', name: '沙巴紅茶 (Sabah Tea)', description: '神山有機栽種，味道單純不澀。推薦綠色包裝。', rating: 5, imageUrl: 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?q=80&w=500', locationHint: '各大超市' },
+        { id: 'si-2', name: '益和丹南咖啡', description: '沙巴最古老咖啡，必買「銀色包裝 Kopi O」，炭燒味香濃。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1559496417-e7f25cb247f3?q=80&w=500', locationHint: '超市' },
+        { id: 'si-3', name: 'Beryl\'s 巧克力', description: '國寶級巧克力，推薦提拉米蘇和榴槤口味。', rating: 5, imageUrl: 'https://images.unsplash.com/photo-1511381978829-2c287a32d18b?q=80&w=500' },
+        { id: 'si-4', name: 'Eureka 爆米花', description: '馬來西亞產地價約台灣6-7折。口味超多(番茄/酸奶洋蔥)。', rating: 5, locationHint: 'Imago Mall 專櫃', imageUrl: 'https://images.unsplash.com/photo-1578849278619-e73505e9610f?q=80&w=500' },
+        { id: 'si-5', name: 'A1 肉骨茶包', description: '⚠️ 只能買純藥材粉/香料包！含豬肉成分禁帶回台(罰20萬)。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=500' },
+        { id: 'si-6', name: 'Kaya 咖椰醬', description: '如果愛上富源的吐司，買罐頭裝回家抹吐司。', rating: 3, imageUrl: 'https://images.unsplash.com/photo-1589301760588-441b6f5e71a9?q=80&w=500' },
+        { id: 'si-7', name: 'Fipper 夾腳拖', description: '國民拖鞋(大象標誌)。橡膠材質好穿防滑，顏色繽紛。', rating: 5, priceEstimate: 'RM 20-40', locationHint: 'Imago Mall', imageUrl: 'https://images.unsplash.com/photo-1562124638-724e13052aaf?q=80&w=500' },
+        { id: 'si-8', name: 'Padini (Vincci)', description: '國民快時尚。Vincci 鞋包非常便宜好看，涼鞋常不到台幣400。', rating: 4, locationHint: 'Imago Mall', imageUrl: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=500' },
+        { id: 'si-9', name: 'Bata 鞋子', description: '市佔率高，價格比台灣便宜，穿起來很軟很舒服。', rating: 3, locationHint: 'Imago Mall', imageUrl: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=500' },
+        { id: 'si-10', name: '長鼻猴娃娃', description: '婆羅洲特有，鼻子大大醜萌，很有紀念價值。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1570414461014-429a4c58c1df?q=80&w=500' },
+        { id: 'si-11', name: '沙巴手工藝品', description: '編織包、串珠，色彩鮮豔。', rating: 4, locationHint: '加雅街市集', imageUrl: 'https://images.unsplash.com/photo-1459416527563-3467614d9b62?q=80&w=500' },
+        { id: 'si-12', name: 'The Art Attic 文創', description: '當地藝術家設計的明信片、T恤、磁鐵，質感好。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=500' }
+      ];
+
       // ----------------------------------------------------------------------
       // 3. Components
       // ----------------------------------------------------------------------
@@ -1215,7 +1240,7 @@
                  
                  {activeTab === 'plan' && (
                     <div className="relative z-20 bg-white/30 backdrop-blur-md shadow-sm border-b border-white/20 pb-4 pt-safe flex flex-col gap-4">
-                       <div className="text-center mt-6 px-4"><h2 className="text-2xl font-serif font-bold text-sabah-dark tracking-wide">Sabah | 亞庇海中遊</h2></div>
+                       <div className="text-center mt-6 px-4"><h2 className="text-3xl font-serif font-bold text-sabah-dark tracking-wide">Sabah | 亞庇海中遊</h2></div>
                        <div className="flex items-end justify-between px-4 gap-3">
                            <div className="flex-1 overflow-hidden min-w-0"><DateSelector days={dayPlans} selectedDate={selectedDate} onSelectDate={setSelectedDate} /></div>
                            <div className="flex flex-col items-end gap-2 pb-1 flex-shrink-0">
