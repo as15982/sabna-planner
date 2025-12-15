@@ -94,7 +94,7 @@
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-      // Import Dependencies from esm.sh
+      // 1. Imports (Using esm.sh for consistency to avoid #321 error)
       import React, { useState, useEffect, useRef, useMemo } from 'https://esm.sh/react@18.2.0';
       import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
       import { HashRouter } from 'https://esm.sh/react-router-dom@6.22.3?external=react,react-dom';
@@ -107,7 +107,7 @@
       } from 'https://esm.sh/lucide-react@0.363.0?external=react';
 
       // ----------------------------------------------------------------------
-      // Constants & Data
+      // 2. Constants & Data
       // ----------------------------------------------------------------------
       const EXCHANGE_RATE = 7.5;
 
@@ -232,6 +232,8 @@
         }
       ];
 
+      const INITIAL_EXPENSES = [];
+
       const INITIAL_SHOPPING_LOCATIONS = [
         { id: 'sl-1', name: 'Wisma Merdeka', description: '最佳換匯地點，也有賣紀念品', type: '換匯 & 紀念品', googleMapQuery: 'Wisma Merdeka Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1574902998399-56d11bd85721?q=80&w=500' },
         { id: 'sl-2', name: 'Imago Shopping Mall', description: '亞庇最大商場，必買 Padini, Bata, Fipper, Eureka', type: '購物中心', googleMapQuery: 'Imago Shopping Mall Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1519567241046-7f570eee3d9f?q=80&w=500' },
@@ -256,7 +258,7 @@
       ];
 
       // ----------------------------------------------------------------------
-      // Components
+      // 3. Components
       // ----------------------------------------------------------------------
 
       // --- EditableImage ---
@@ -291,7 +293,7 @@
         };
 
         return (
-          <>
+          <React.Fragment>
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             <div 
               className={`relative overflow-hidden cursor-pointer select-none ${className}`}
@@ -309,7 +311,7 @@
                 </div>
               )}
             </div>
-          </>
+          </React.Fragment>
         );
       };
 
@@ -389,7 +391,6 @@
             const _items = [...dayPlan.items];
             const dragged = _items.splice(dragItem.current, 1)[0];
             _items.splice(dragOverItem.current, 0, dragged);
-            // Re-calc logic omitted for brevity, keeping simple reorder
             onUpdate({ ...dayPlan, items: _items });
           }
           dragItem.current = null;
@@ -485,7 +486,7 @@
         );
       };
 
-      // --- MapComponent (Converted to raw Leaflet) ---
+      // --- MapComponent (Pure Leaflet to avoid React-Leaflet Context issues) ---
       const MapComponent = ({ dayPlans, selectedDate }) => {
         const mapRef = useRef(null);
         const mapInstance = useRef(null);
@@ -541,7 +542,6 @@
             if (markersRef.current.length > 0) {
                 mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
             }
-
         }, [activePlan]);
 
         return (
