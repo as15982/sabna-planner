@@ -19,6 +19,20 @@
     <!-- Babel for JSX compilation in browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+    <!-- Import Map: Solves "Failed to resolve module specifier" errors -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "react-dom": "https://esm.sh/react-dom@18.2.0",
+        "react-router-dom": "https://esm.sh/react-router-dom@6.22.3?deps=react@18.2.0,react-dom@18.2.0",
+        "leaflet": "https://esm.sh/leaflet@1.9.4",
+        "lucide-react": "https://esm.sh/lucide-react@0.363.0?deps=react@18.2.0"
+      }
+    }
+    </script>
+
     <script>
       tailwind.config = {
         theme: {
@@ -75,86 +89,108 @@
         70% { box-shadow: 0 0 0 10px rgba(0, 119, 190, 0); }
         100% { box-shadow: 0 0 0 0 rgba(0, 119, 190, 0); }
       }
+      
+      /* Map Tooltip Customization */
+      .leaflet-tooltip.custom-map-label {
+        background-color: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 6px;
+        padding: 2px 6px;
+        font-family: 'Noto Sans TC', sans-serif;
+        font-size: 10px;
+        font-weight: 700;
+        color: #2D3436;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        white-space: nowrap;
+        margin-top: 2px;
+      }
+      .leaflet-tooltip-left.custom-map-label::before { border-left-color: rgba(255, 255, 255, 0.95); }
+      .leaflet-tooltip-right.custom-map-label::before { border-right-color: rgba(255, 255, 255, 0.95); }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
-    "react-leaflet": "https://esm.sh/react-leaflet@^5.0.0",
-    "leaflet": "https://esm.sh/leaflet@^1.9.4",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1"
-  }
-}
-</script>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-      // 1. Imports (Using esm.sh for consistency to avoid #321 error)
-      import React, { useState, useEffect, useRef, useMemo } from 'https://esm.sh/react@18.2.0';
-      import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
-      import { HashRouter } from 'https://esm.sh/react-router-dom@6.22.3?external=react,react-dom';
-      import L from 'https://esm.sh/leaflet@1.9.4';
+      // 1. Imports 
+      // Using bare specifiers resolved by the Import Map above
+      import React, { useState, useEffect, useRef, useMemo } from 'react';
+      import ReactDOM from 'react-dom/client';
+      import { HashRouter } from 'react-router-dom';
+      import L from 'leaflet';
       import { 
         Calendar, Map as MapIcon, Wallet, ShoppingBag, Info, Cloud, Sun, CloudRain,
         MapPin, Clock, Plane, ArrowRight, Pencil, Check, X, ArrowDown, GripVertical, Image as ImageIcon,
         Plus, Coffee, Car, Home, ArrowRightLeft, CreditCard, Banknote, Users, Trash2,
-        Star, AlertTriangle, ChevronDown, ChevronUp, Phone, Plug, FileText, User, Heart
-      } from 'https://esm.sh/lucide-react@0.363.0?external=react';
+        Star, AlertTriangle, ChevronDown, ChevronUp, Phone, Plug, FileText, User, Heart,
+        Shirt, Pill, Droplets, Zap, Shield, Camera, Utensils, MoreHorizontal
+      } from 'lucide-react';
 
       // ----------------------------------------------------------------------
       // 2. Constants & Data
       // ----------------------------------------------------------------------
       const EXCHANGE_RATE = 7.5;
+      const FALLBACK_IMG = "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=500&auto=format&fit=crop";
+
+      const handleImageError = (e) => {
+        e.currentTarget.onerror = null; 
+        e.currentTarget.src = FALLBACK_IMG;
+      };
 
       const LOCATIONS = {
-        BKI_AIRPORT: { lat: 5.9375, lng: 116.0510, name: "亞庇國際機場 (BKI)", url: "https://maps.app.goo.gl/ePJZ5U5xeFCmF2hU8" },
-        JESSELTON_QUAY: { lat: 5.9904, lng: 116.0798, name: "Jesselton Quay (JQ)", url: "https://maps.app.goo.gl/3R1xZLhLTuicD3GB6" },
-        BORENOS_CHICKEN: { lat: 5.9760, lng: 116.0738, name: "Borenos Fried Chicken", url: "https://maps.app.goo.gl/TxwxbFrYLVCmYscd8" },
-        FOOK_YUEN_GAYA: { lat: 5.9845, lng: 116.0775, name: "富源茶餐廳 Fook Yuen", url: "https://maps.app.goo.gl/EuUbbkmhpq9Sqvrk9" },
-        YEE_FUNG_LAKSA: { lat: 5.9830, lng: 116.0770, name: "怡豐茶室 Yee Fung Laksa", url: "https://maps.app.goo.gl/WnxZrPhzcoAmS2GNA" },
-        WISMA_MERDEKA: { lat: 5.9856, lng: 116.0777, name: "Wisma Merdeka", url: "https://maps.app.goo.gl/Z1wmwJvYJyEGGrAM9" },
-        JESSELTON_POINT: { lat: 5.9890, lng: 116.0780, name: "Jesselton Point 碼頭", url: "https://maps.app.goo.gl/V9jC4SENVnXqVkgd7" },
-        MANUKAN_ISLAND: { lat: 5.9644, lng: 116.0076, name: "Manukan 馬努干島", url: "https://maps.app.goo.gl/2YudfdqDXmGzBn5H6" },
-        SAPI_ISLAND: { lat: 5.9606, lng: 116.0048, name: "Sapi 沙比島", url: "https://maps.app.goo.gl/EepQ76LKkaCKMedr7" },
-        YU_KEE_BAK_KUT_TEH: { lat: 5.9840, lng: 116.0772, name: "佑記肉骨茶 Yu Kee", url: "https://maps.app.goo.gl/91JKY3SXBkZMh5KP6" },
-        SIN_KEE_BAK_KUT_TEH: { lat: 5.9825, lng: 116.0770, name: "新記肉骨茶 Sin Kee", url: "https://maps.app.goo.gl/aAfNCokREo4Ef5PCA" },
-        API_API_NIGHT_MARKET: { lat: 5.9835, lng: 116.0772, name: "加雅街夜市", url: "https://maps.app.goo.gl/XAuWddgRy8R4Qoj69" },
-        WOO_CAFE: { lat: 5.9818, lng: 116.0785, name: "Woo! Cafe", url: "https://maps.app.goo.gl/XS1iXNaWkPyEPGcy7" },
-        GUANS_KOPITIAM: { lat: 5.9835, lng: 116.0775, name: "源茶室 Guan's Kopitiam", url: "https://maps.app.goo.gl/KNiTh3YnwaHwHHy18" },
-        UMS_MOSQUE: { lat: 6.0367, lng: 116.1186, name: "沙巴大學粉紅清真寺", url: "https://maps.app.goo.gl/LpWEkTrs3vzVogNy8" },
-        JIA_XIANG_LINTAS: { lat: 5.9490, lng: 116.0920, name: "家香生肉麵", url: "https://maps.app.goo.gl/dH28jaQhk65kTVbc6" },
-        IMAGO_MALL: { lat: 5.9705, lng: 116.0667, name: "Imago Shopping Mall", url: "https://maps.app.goo.gl/Xaix69z83tSxYWX79" },
-        TANJUNG_ARU_BEACH: { lat: 5.9482, lng: 116.0447, name: "丹絨亞路海灘 Beach 2", url: "https://maps.app.goo.gl/bDrPDVcMoYZ49HvJA" },
-        WELCOME_SEAFOOD: { lat: 5.9765, lng: 116.0740, name: "大茄來海鮮", url: "https://maps.app.goo.gl/yhW1Uk42XVnLD8oQ9" },
-        KAMA_SPA: { lat: 5.9815, lng: 116.0782, name: "Kama'A Spa", url: "https://maps.app.goo.gl/Mxi3rzqiDZf4rFFCA" }
+        BKI_AIRPORT: { lat: 5.9375, lng: 116.0510, name: "亞庇國際機場 (BKI)", address: "Jalan Lapangan Terbang (Lama), 88200", url: "https://maps.app.goo.gl/ePJZ5U5xeFCmF2hU8" },
+        JESSELTON_QUAY: { lat: 5.9904, lng: 116.0798, name: "Jesselton Quay (JQ)", address: "Jesselton Quay, 88000 Kota Kinabalu", url: "https://maps.app.goo.gl/3R1xZLhLTuicD3GB6" },
+        BORENOS_CHICKEN: { lat: 5.9760, lng: 116.0738, name: "Borenos Fried Chicken", address: "Lot G23, Star City North, Asia City", url: "https://maps.app.goo.gl/TxwxbFrYLVCmYscd8" },
+        FOOK_YUEN_GAYA: { lat: 5.9845, lng: 116.0775, name: "富源茶餐廳 Fook Yuen", address: "53, Jalan Gaya, Pusat Bandar", url: "https://maps.app.goo.gl/EuUbbkmhpq9Sqvrk9" },
+        YEE_FUNG_LAKSA: { lat: 5.9830, lng: 116.0770, name: "怡豐茶室 Yee Fung Laksa", address: "127, Jalan Gaya, Pusat Bandar", url: "https://maps.app.goo.gl/WnxZrPhzcoAmS2GNA" },
+        WISMA_MERDEKA: { lat: 5.9856, lng: 116.0777, name: "Wisma Merdeka", address: "AG16, Jalan Tun Razak", url: "https://maps.app.goo.gl/Z1wmwJvYJyEGGrAM9" },
+        JESSELTON_POINT: { lat: 5.9890, lng: 116.0780, name: "Jesselton Point 碼頭", address: "Jesselton Point Ferry Terminal", url: "https://maps.app.goo.gl/V9jC4SENVnXqVkgd7" },
+        MANUKAN_ISLAND: { lat: 5.9644, lng: 116.0076, name: "Manukan", address: "Manukan Island, Sabah", url: "https://maps.app.goo.gl/2YudfdqDXmGzBn5H6" },
+        SAPI_ISLAND: { lat: 5.9606, lng: 116.0048, name: "Sapi", address: "Sapi Island, Sabah", url: "https://maps.app.goo.gl/EepQ76LKkaCKMedr7" },
+        YU_KEE_BAK_KUT_TEH: { lat: 5.9840, lng: 116.0772, name: "佑記肉骨茶 Yu Kee", address: "7, Jalan Gaya, Pusat Bandar", url: "https://maps.app.goo.gl/91JKY3SXBkZMh5KP6" },
+        SIN_KEE_BAK_KUT_TEH: { lat: 5.9825, lng: 116.0770, name: "新記肉骨茶 Sin Kee", address: "26, Jalan Pantai, Pusat Bandar", url: "https://maps.app.goo.gl/aAfNCokREo4Ef5PCA" },
+        API_API_NIGHT_MARKET: { lat: 5.9835, lng: 116.0772, name: "加雅街夜市", address: "Jalan Gaya, Pusat Bandar", url: "https://maps.app.goo.gl/XAuWddgRy8R4Qoj69" },
+        WOO_CAFE: { lat: 5.9818, lng: 116.0785, name: "Woo! Cafe", address: "25, Lorong Dewan, Pusat Bandar", url: "https://maps.app.goo.gl/XS1iXNaWkPyEPGcy7" },
+        GUANS_KOPITIAM: { lat: 5.9835, lng: 116.0775, name: "源茶室 Guan's Kopitiam", address: "Jalan Gaya, Pusat Bandar", url: "https://maps.app.goo.gl/KNiTh3YnwaHwHHy18" },
+        UMS_MOSQUE: { lat: 6.0367, lng: 116.1186, name: "沙巴大學粉紅清真寺", address: "Jalan UMS, 88400 Kota Kinabalu", url: "https://maps.app.goo.gl/LpWEkTrs3vzVogNy8" },
+        JIA_XIANG_LINTAS: { lat: 5.9490, lng: 116.0920, name: "家香生肉麵", address: "Lot 1-0, Lintas Plaza", url: "https://maps.app.goo.gl/dH28jaQhk65kTVbc6" },
+        IMAGO_MALL: { lat: 5.9705, lng: 116.0667, name: "Imago Shopping Mall", address: "KK Times Square, Phase 2", url: "https://maps.app.goo.gl/Xaix69z83tSxYWX79" },
+        TANJUNG_ARU_BEACH: { lat: 5.9482, lng: 116.0447, name: "丹絨亞路海灘 Beach 2", address: "Tanjung Aru, 88100", url: "https://maps.app.goo.gl/bDrPDVcMoYZ49HvJA" },
+        WELCOME_SEAFOOD: { lat: 5.9765, lng: 116.0740, name: "大茄來海鮮", address: "Lot G18, Kompleks Asia City", url: "https://maps.app.goo.gl/yhW1Uk42XVnLD8oQ9" },
+        KAMA_SPA: { lat: 5.9815, lng: 116.0782, name: "Kama'A Spa", address: "15, Jalan Dewan, Pusat Bandar", url: "https://maps.app.goo.gl/Mxi3rzqiDZf4rFFCA" }
+      };
+
+      const TYPE_MAPPING = {
+        transport: '交通移動',
+        food: '品嚐美食',
+        relax: '休息放鬆',
+        activity: '探索景點',
+        shopping: '購物行程'
       };
 
       const INITIAL_ITINERARY = [
         {
           date: '2026-01-09',
           weatherTemp: 27,
-          weatherCondition: 'Cloudy',
+          weatherCondition: '多雲',
           bgImage: 'https://i.pinimg.com/736x/a4/ae/3f/a4ae3f8d0c49e9cbf2e725a42e6d24ba.jpg', // D1
           flight: {
             departureTime: '19:15',
             departureCode: 'TPE',
-            departureAirport: '台灣桃園國際機場 ｜T1航廈',
+            departureAirport: '台灣桃園國際機場 T1',
             arrivalTime: '22:50',
             arrivalCode: 'BKI',
-            arrivalAirport: '哥打京那巴魯國際機場｜T1航廈',
+            arrivalAirport: '哥打京那巴魯國際機場 T1',
             airline: '馬來西亞亞洲航空公司 AK1511',
             flightNumber: 'AK1511',
-            aircraft: '經濟艙 空中巴士 A320-212'
+            aircraft: '經濟艙 空中巴士 A320-212',
+            duration: '3小時 35分',
+            airlineLogo: 'https://upload.wikimedia.org/wikipedia/commons/f/f5/AirAsia_New_Logo.svg'
           },
           items: [
             { id: '1-1', time: '22:30', duration: 40, activity: '抵達亞庇國際機場 (BKI)', location: 'Kota Kinabalu International Airport', coords: LOCATIONS.BKI_AIRPORT, type: 'transport', travelTime: 'Grab 20分' },
             { id: '1-2', time: '23:30', duration: 20, activity: '抵達住宿 Jesselton Quay (JQ)', location: 'Jesselton Quay, Jalan Tun Fuad Stephens', coords: LOCATIONS.JESSELTON_QUAY, type: 'relax', travelTime: '整理行李' },
-            { id: '1-3', time: '23:50', duration: 60, activity: '宵夜 (二選一)', location: 'Swipe to view options', coords: LOCATIONS.BORENOS_CHICKEN, type: 'food', options: [
+            { id: '1-3', time: '23:50', duration: 60, activity: '宵夜 (二選一)', location: '', coords: LOCATIONS.BORENOS_CHICKEN, type: 'food', options: [
               { activity: 'Borenos Fried Chicken', location: 'Lot G23, Kompleks Asia City', coords: LOCATIONS.BORENOS_CHICKEN, notes: '在地好吃炸雞，開到半夜', imageUrl: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=500&auto=format&fit=crop' },
               { activity: '富源茶餐廳 Fook Yuen', location: '53, Jalan Gaya', coords: LOCATIONS.FOOK_YUEN_GAYA, notes: '咖椰吐司、拉茶，開到很晚', imageUrl: 'https://images.unsplash.com/photo-1589301760588-441b6f5e71a9?q=80&w=500&auto=format&fit=crop' }
             ]}
@@ -163,7 +199,7 @@
         {
           date: '2026-01-10',
           weatherTemp: 31,
-          weatherCondition: 'Sunny',
+          weatherCondition: '晴朗',
           bgImage: 'https://i.pinimg.com/1200x/39/b4/aa/39b4aa96ca7fe7de41f28623af1eaf8b.jpg', // D2
           items: [
             { id: '2-0', time: '09:00', duration: 0, activity: '從住宿出發', location: 'Jesselton Quay (JQ)', coords: LOCATIONS.JESSELTON_QUAY, type: 'transport', travelTime: 'Grab 15分' },
@@ -172,7 +208,7 @@
             { id: '2-3', time: '10:30', duration: 30, activity: '出海：Jesselton Point 碼頭', location: 'Jesselton Point Ferry Terminal', coords: LOCATIONS.JESSELTON_POINT, type: 'transport', notes: '購票：Two Islands - Sapi + Manukan', travelTime: '船程 20分' },
             { id: '2-4a', time: '11:00', duration: 120, activity: '馬努干島 Manukan Island', location: 'Tunku Abdul Rahman Park', coords: LOCATIONS.MANUKAN_ISLAND, type: 'activity', notes: '享受陽光沙灘', travelTime: '換島船程' },
             { id: '2-4b', time: '13:00', duration: 120, activity: '沙比島 Sapi Island', location: 'Tunku Abdul Rahman Park', coords: LOCATIONS.SAPI_ISLAND, type: 'activity', notes: '水質較清澈，適合浮潛', travelTime: '船程返回' },
-            { id: '2-5', time: '19:00', duration: 75, activity: '晚餐：肉骨茶 (二選一)', location: 'Swipe to view options', coords: LOCATIONS.YU_KEE_BAK_KUT_TEH, type: 'food', options: [
+            { id: '2-5', time: '19:00', duration: 75, activity: '晚餐：肉骨茶 (二選一)', location: '', coords: LOCATIONS.YU_KEE_BAK_KUT_TEH, type: 'food', options: [
                { activity: '佑記肉骨茶 Yu Kee', location: '7, Jalan Gaya', coords: LOCATIONS.YU_KEE_BAK_KUT_TEH, notes: '藥膳味重，碗裝', imageUrl: 'https://images.unsplash.com/photo-1543363363-b8cf4b306b6f?q=80&w=500&auto=format&fit=crop' },
                { activity: '新記肉骨茶 Sin Kee', location: '26, Jalan Pantai', coords: LOCATIONS.SIN_KEE_BAK_KUT_TEH, notes: '湯頭濃郁，砂鍋裝', imageUrl: 'https://images.unsplash.com/photo-1627916508000-0df9a7978e5f?q=80&w=500&auto=format&fit=crop' }
             ], travelTime: '步行 3分' },
@@ -182,22 +218,22 @@
         {
           date: '2026-01-11',
           weatherTemp: 29,
-          weatherCondition: 'Cloudy',
+          weatherCondition: '多雲',
           bgImage: 'https://i.pinimg.com/1200x/fd/d5/18/fdd5185cbab77d2e1abf50b54b1fc656.jpg', // D3
           items: [
             { id: '3-0', time: '10:30', duration: 0, activity: '從住宿出發', location: 'Jesselton Quay (JQ)', coords: LOCATIONS.JESSELTON_QUAY, type: 'transport', travelTime: 'Grab 15分' },
-            { id: '3-1', time: '10:45', duration: 90, activity: '網美早午餐 (二選一)', location: 'Swipe to view options', coords: LOCATIONS.WOO_CAFE, type: 'food', options: [
+            { id: '3-1', time: '10:45', duration: 90, activity: '網美早午餐 (二選一)', location: '', coords: LOCATIONS.WOO_CAFE, type: 'food', options: [
               { activity: 'Woo! Cafe', location: '25, Lorong Dewan', coords: LOCATIONS.WOO_CAFE, notes: '植物系網美風，義大利麵、早午餐好吃', imageUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=500&auto=format&fit=crop' },
               { activity: 'Guan\'s Kopitiam', location: 'Jalan Gaya', coords: LOCATIONS.GUANS_KOPITIAM, notes: '有冷氣的復古風，推咖椰吐司、紅咖哩雞', imageUrl: 'https://images.unsplash.com/photo-1559403842-70b925b4be46?q=80&w=500&auto=format&fit=crop' }
             ], travelTime: '車程 90分' },
-            { id: '3-2', time: '13:30', duration: 360, activity: '長鼻猴 & 螢火蟲之旅', location: 'Kawa Kawa / Weston (Pickup at JQ)', coords: LOCATIONS.JESSELTON_QUAY, type: 'activity', notes: '旅行社專車接送，記得帶防蚊液', travelTime: '車程 90分' },
+            { id: '3-2', time: '13:30', duration: 360, activity: '長鼻猴 & 螢火蟲之旅', location: '', coords: LOCATIONS.JESSELTON_QUAY, type: 'activity', notes: '旅行社專車接送，記得帶防蚊液', travelTime: '車程 90分' },
             { id: '3-3', time: '21:30', duration: 60, activity: '宵夜 (視體力決定)', location: 'Jesselton Quay / 富源', coords: LOCATIONS.FOOK_YUEN_GAYA, type: 'food' }
           ]
         },
         {
           date: '2026-01-12',
           weatherTemp: 32,
-          weatherCondition: 'Sunny',
+          weatherCondition: '晴朗',
           bgImage: 'https://i.pinimg.com/1200x/3d/2b/b9/3d2bb9a9e3ebc71f0b73692f93e19633.jpg', // D4
           items: [
             { id: '4-0', time: '10:40', duration: 0, activity: '從住宿出發', location: 'Jesselton Quay (JQ)', coords: LOCATIONS.JESSELTON_QUAY, type: 'transport', travelTime: 'Grab 20分' },
@@ -212,49 +248,26 @@
         {
           date: '2026-01-13',
           weatherTemp: 26,
-          weatherCondition: 'Rain',
+          weatherCondition: '雨天',
           bgImage: 'https://i.pinimg.com/736x/7e/22/3f/7e223f12849b463bc9ce8caf19b59e53.jpg', // D5
           flight: {
             departureTime: '07:40',
             departureCode: 'BKI',
-            departureAirport: '哥打京那巴魯國際機場｜T1航廈',
+            departureAirport: '哥打京那巴魯國際機場 T1',
             arrivalTime: '10:55',
             arrivalCode: 'TPE',
-            arrivalAirport: '台灣桃園國際機場｜T1航廈',
+            arrivalAirport: '台灣桃園國際機場 T1',
             airline: '馬來西亞亞洲航空公司 AK1510',
             flightNumber: 'AK1510',
-            aircraft: '經濟艙 空中巴士 A320-212'
+            aircraft: '經濟艙 空中巴士 A320-212',
+            duration: '3小時 15分',
+            airlineLogo: 'https://upload.wikimedia.org/wikipedia/commons/f/f5/AirAsia_New_Logo.svg'
           },
           items: [
             { id: '5-1', time: '04:45', duration: 15, activity: '起床 & 退房', location: 'Jesselton Quay', coords: LOCATIONS.JESSELTON_QUAY, type: 'relax', travelTime: 'Grab 20分' },
             { id: '5-2', time: '05:00', duration: 0, activity: '出發前往亞庇機場', location: 'Kota Kinabalu International Airport', coords: LOCATIONS.BKI_AIRPORT, type: 'transport', notes: '叫 Grab，07:00 飛機起飛 ✈️ 回家' }
           ]
         }
-      ];
-
-      const INITIAL_EXPENSES = [];
-
-      const INITIAL_SHOPPING_LOCATIONS = [
-        { id: 'sl-1', name: 'Wisma Merdeka', description: '最佳換匯地點，也有賣紀念品', type: '換匯 & 紀念品', googleMapQuery: 'Wisma Merdeka Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1574902998399-56d11bd85721?q=80&w=500' },
-        { id: 'sl-2', name: 'Imago Shopping Mall', description: '亞庇最大商場，必買 Padini, Bata, Fipper, Eureka', type: '購物中心', googleMapQuery: 'Imago Shopping Mall Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1519567241046-7f570eee3d9f?q=80&w=500' },
-        { id: 'sl-3', name: 'Gaya Street Market', description: '週日市集 / 週五六夜市，手工藝品多', type: '當地市集', googleMapQuery: 'Gaya Street Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?q=80&w=500' },
-        { id: 'sl-4', name: 'Suria Sabah', description: '位於海邊的購物中心，有無敵海景，超市好買', type: '購物中心', googleMapQuery: 'Suria Sabah Shopping Mall', imageUrl: 'https://images.unsplash.com/photo-1555529733-0e670560f7e1?q=80&w=500' },
-        { id: 'sl-5', name: 'KK Plaza', description: '地下室超市便宜，適合買伴手禮', type: '超市', googleMapQuery: 'KK Plaza Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1604719312566-b7e6012e6b17?q=80&w=500' }
-      ];
-
-      const INITIAL_SHOPPING_ITEMS = [
-        { id: 'si-1', name: '沙巴紅茶 (Sabah Tea)', description: '神山有機栽種，味道單純不澀。推薦綠色包裝。', rating: 5, imageUrl: 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?q=80&w=500', locationHint: '各大超市' },
-        { id: 'si-2', name: '益和丹南咖啡', description: '沙巴最古老咖啡，必買「銀色包裝 Kopi O」，炭燒味香濃。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1559496417-e7f25cb247f3?q=80&w=500', locationHint: '超市' },
-        { id: 'si-3', name: 'Beryl\'s 巧克力', description: '國寶級巧克力，推薦提拉米蘇和榴槤口味。', rating: 5, imageUrl: 'https://images.unsplash.com/photo-1511381978829-2c287a32d18b?q=80&w=500' },
-        { id: 'si-4', name: 'Eureka 爆米花', description: '馬來西亞產地價約台灣6-7折。口味超多(番茄/酸奶洋蔥)。', rating: 5, locationHint: 'Imago Mall 專櫃', imageUrl: 'https://images.unsplash.com/photo-1578849278619-e73505e9610f?q=80&w=500' },
-        { id: 'si-5', name: 'A1 肉骨茶包', description: '⚠️ 只能買純藥材粉/香料包！含豬肉成分禁帶回台(罰20萬)。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=500' },
-        { id: 'si-6', name: 'Kaya 咖椰醬', description: '如果愛上富源的吐司，買罐頭裝回家抹吐司。', rating: 3, imageUrl: 'https://images.unsplash.com/photo-1589301760588-441b6f5e71a9?q=80&w=500' },
-        { id: 'si-7', name: 'Fipper 夾腳拖', description: '國民拖鞋(大象標誌)。橡膠材質好穿防滑，顏色繽紛。', rating: 5, priceEstimate: 'RM 20-40', locationHint: 'Imago Mall', imageUrl: 'https://images.unsplash.com/photo-1562124638-724e13052aaf?q=80&w=500' },
-        { id: 'si-8', name: 'Padini (Vincci)', description: '國民快時尚。Vincci 鞋包非常便宜好看，涼鞋常不到台幣400。', rating: 4, locationHint: 'Imago Mall', imageUrl: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=500' },
-        { id: 'si-9', name: 'Bata 鞋子', description: '市佔率高，價格比台灣便宜，穿起來很軟很舒服。', rating: 3, locationHint: 'Imago Mall', imageUrl: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=500' },
-        { id: 'si-10', name: '長鼻猴娃娃', description: '婆羅洲特有，鼻子大大醜萌，很有紀念價值。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1570414461014-429a4c58c1df?q=80&w=500' },
-        { id: 'si-11', name: '沙巴手工藝品', description: '編織包、串珠，色彩鮮豔。', rating: 4, locationHint: '加雅街市集', imageUrl: 'https://images.unsplash.com/photo-1459416527563-3467614d9b62?q=80&w=500' },
-        { id: 'si-12', name: 'The Art Attic 文創', description: '當地藝術家設計的明信片、T恤、磁鐵，質感好。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=500' }
       ];
 
       // ----------------------------------------------------------------------
@@ -304,7 +317,7 @@
                 <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-bold border border-white/30">更換圖片</div>
               </div>
               {src ? (
-                <img src={src} alt={alt} className="w-full h-full object-cover pointer-events-none" onError={(e) => e.currentTarget.style.display = 'none'} />
+                <img src={src} alt={alt} className="w-full h-full object-cover pointer-events-none" onError={handleImageError} />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-100">
                   {placeholderIcon || <ImageIcon size={24} />}
@@ -319,7 +332,7 @@
       const DateSelector = ({ days, selectedDate, onSelectDate }) => {
         return (
           <div className="w-full bg-transparent">
-            <div className="flex overflow-x-auto gap-2 px-1 pb-1 no-scrollbar snap-x">
+            <div className="flex overflow-x-auto gap-3 px-1 pb-1 no-scrollbar snap-x">
               {days.map((day) => {
                 const isSelected = day.date === selectedDate;
                 const [year, month, d] = day.date.split('-').map(Number);
@@ -329,7 +342,7 @@
                   <button
                     key={day.date}
                     onClick={() => onSelectDate(day.date)}
-                    className={`flex-shrink-0 flex flex-col items-center justify-center w-[42px] h-[54px] rounded-[14px] transition-all duration-300 snap-center border-[1.5px]
+                    className={`flex-shrink-0 flex flex-col items-center justify-center w-[50px] h-[50px] rounded-[14px] transition-all duration-300 snap-center border-[1.5px]
                     ${isSelected ? 'bg-sabah-blue border-sabah-blue text-white shadow-md shadow-blue-500/30 scale-105' : 'bg-white/80 border-transparent text-gray-500 hover:bg-white hover:border-gray-100 backdrop-blur-sm'}`}
                   >
                     <span className={`text-[8px] font-sans font-bold uppercase tracking-wider ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>{weekday}</span>
@@ -380,6 +393,21 @@
           });
           onUpdate({ ...dayPlan, items: updatedItems });
         };
+        
+        const handleSaveTitle = (itemId, newTitle, optionIndex) => {
+          const updatedItems = dayPlan.items.map(item => {
+            if (item.id === itemId) {
+              if (optionIndex !== undefined && item.options) {
+                const newOptions = [...item.options];
+                newOptions[optionIndex] = { ...newOptions[optionIndex], activity: newTitle };
+                return { ...item, options: newOptions };
+              }
+              return { ...item, activity: newTitle };
+            }
+            return item;
+          });
+          onUpdate({ ...dayPlan, items: updatedItems });
+        };
 
         const handleDragStart = (e, index) => {
           dragItem.current = index;
@@ -419,12 +447,32 @@
             {dayPlan.flight && (
               <div className="bg-white/90 backdrop-blur-md rounded-[24px] p-5 shadow-card mb-8 border border-white/50 relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 to-red-600"></div>
-                <div className="flex justify-between items-center mb-6 mt-1">
-                  <div className="flex flex-col"><span className="text-4xl font-sans font-bold text-sabah-dark">{dayPlan.flight.departureCode}</span><span className="text-2xl font-serif text-sabah-blue font-bold">{dayPlan.flight.departureTime}</span></div>
-                  <div className="flex flex-col items-center flex-1 px-4 text-gray-300"><Plane size={32} className="transform -rotate-45" /><div className="w-full h-[1px] bg-gray-300 border-t border-dashed border-gray-400 mt-2"></div><span className="text-[10px] text-gray-400 font-bold mt-1">直飛</span></div>
-                  <div className="flex flex-col items-end"><span className="text-4xl font-sans font-bold text-sabah-dark">{dayPlan.flight.arrivalCode}</span><span className="text-2xl font-serif text-sabah-blue font-bold">{dayPlan.flight.arrivalTime}</span></div>
+                <div className="flex justify-between items-start mb-6 mt-1">
+                  <div className="flex flex-col">
+                      <span className="text-4xl font-sans font-bold text-sabah-dark">{dayPlan.flight.departureCode}</span>
+                      <span className="text-2xl font-serif text-sabah-blue font-bold">{dayPlan.flight.departureTime}</span>
+                      <span className="text-[10px] text-gray-500 mt-1">{dayPlan.flight.departureAirport}</span>
+                  </div>
+                  <div className="flex flex-col items-center flex-1 px-4 text-gray-300 pt-2">
+                      {dayPlan.flight.airlineLogo ? <img src={dayPlan.flight.airlineLogo} alt="Airline" className="h-6 mb-2 object-contain" /> : <Plane size={32} className="transform -rotate-45" />}
+                      <div className="w-full h-[1px] bg-gray-300 border-t border-dashed border-gray-400 mt-2"></div>
+                      <span className="text-[10px] text-gray-400 font-bold mt-1">{dayPlan.flight.duration || '直飛'}</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                      <span className="text-4xl font-sans font-bold text-sabah-dark">{dayPlan.flight.arrivalCode}</span>
+                      <span className="text-2xl font-serif text-sabah-blue font-bold">{dayPlan.flight.arrivalTime}</span>
+                      <span className="text-[10px] text-gray-500 mt-1">{dayPlan.flight.arrivalAirport}</span>
+                  </div>
                 </div>
-                <div className="bg-gray-50/80 rounded-xl p-3 flex items-center gap-3 border border-gray-100"><div className="flex flex-col"><span className="text-xs font-bold text-sabah-dark">{dayPlan.flight.airline}</span><span className="text-[10px] text-gray-400">{dayPlan.flight.aircraft}</span></div></div>
+                <div className="bg-gray-50/80 rounded-xl p-3 flex flex-col gap-1 border border-gray-100">
+                    <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-sabah-dark">{dayPlan.flight.airline}</span>
+                        <span className="text-[10px] text-gray-500 font-bold bg-white px-2 py-0.5 rounded border border-gray-200">{dayPlan.flight.flightNumber}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                         <span className="text-[10px] text-gray-400">{dayPlan.flight.aircraft}</span>
+                    </div>
+                </div>
               </div>
             )}
             
@@ -446,30 +494,82 @@
                         onTouchStart={() => startLongPress(item.id)} onTouchEnd={cancelLongPress} onMouseDown={() => startLongPress(item.id)} onMouseUp={cancelLongPress} onMouseLeave={cancelLongPress}
                       >
                          {pressProgress > 0 && <div className="absolute top-0 left-0 h-1 bg-sabah-blue transition-all duration-100 ease-linear" style={{ width: `${pressProgress}%` }}></div>}
+                         
+                         {editingId === item.id && (
+                             <button 
+                                 onClick={(e) => { e.stopPropagation(); setEditingId(null); }}
+                                 className="absolute top-2 right-2 w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 z-20"
+                             >
+                                 <X size={14} />
+                             </button>
+                         )}
+
                          <div className="flex gap-4">
                             <div className="cursor-grab text-gray-300" draggable onDragStart={(e) => handleDragStart(e, index)} onMouseDown={e=>e.stopPropagation()}><GripVertical size={20} /></div>
                             <div className="flex-1">
-                               <div className="flex items-center gap-1.5 text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-2"><Clock size={10} />{item.type}</div>
-                               <h3 className="text-lg font-serif font-bold text-sabah-dark mb-2 leading-tight">{item.activity}</h3>
-                               <a href={item.coords.url} target="_blank" className="flex items-start gap-1.5 text-gray-500 text-xs hover:text-sabah-blue transition-colors mb-2"><MapPin size={12} className="mt-0.5" />{item.location}</a>
+                               {/* Main Item Title - Editable */}
+                               {editingId === item.id ? (
+                                  <input 
+                                      type="text" 
+                                      value={item.activity} 
+                                      onChange={(e) => handleSaveTitle(item.id, e.target.value)} 
+                                      className="text-lg font-serif font-bold text-sabah-dark mb-2 leading-tight bg-white/50 border-b border-sabah-blue/50 outline-none w-full rounded px-1"
+                                      onClick={(e) => e.stopPropagation()}
+                                  />
+                               ) : (
+                                  <h3 className="text-lg font-serif font-bold text-sabah-dark mb-2 leading-tight">
+                                      {item.activity}
+                                  </h3>
+                               )}
+                               
+                               {/* Location with Link - ONLY show if no options AND location is not empty */}
+                               {(item.location && !item.options) && (
+                                   <a href={item.coords?.url} target="_blank" className="flex items-start gap-1.5 text-gray-500 text-xs hover:text-sabah-blue transition-colors mb-2"><MapPin size={12} className="mt-0.5" />{item.location}</a>
+                               )}
                             </div>
                             {(editingId === item.id || item.imageUrl) && (
                                 <div className="w-20 h-20 flex-shrink-0 rounded-2xl shadow-sm border border-white bg-gray-50 overflow-hidden">
-                                    {editingId === item.id ? <EditableImage src={item.imageUrl} alt={item.activity} onImageChange={(s) => handleSaveImage(item.id, s)} className="w-full h-full" placeholderIcon={<Pencil size={20}/>} /> : <img src={item.imageUrl} className="w-full h-full object-cover" />}
+                                    {editingId === item.id ? <EditableImage src={item.imageUrl} alt={item.activity} onImageChange={(s) => handleSaveImage(item.id, s)} className="w-full h-full" placeholderIcon={<Pencil size={20}/>} /> : <img src={item.imageUrl} className="w-full h-full object-cover" onError={handleImageError} />}
                                 </div>
                             )}
                          </div>
                          {item.options && (
-                             <div className="flex overflow-x-auto gap-4 pb-2 -mx-2 px-2 snap-x no-scrollbar mt-2">
+                             <div className={`flex gap-4 pb-2 -mx-2 px-2 mt-2 ${editingId === item.id ? 'flex-col' : 'overflow-x-auto snap-x no-scrollbar'}`}>
                                 {item.options.map((opt, idx) => (
-                                    <div key={idx} className="min-w-[85%] snap-center bg-white/85 backdrop-blur-md rounded-[24px] p-4 shadow-card border border-white/40 flex gap-3">
-                                        <div className="flex-1"><h3 className="text-base font-serif font-bold text-sabah-dark mb-1">{opt.activity}</h3><span className="text-[10px] text-gray-500">{opt.location}</span></div>
-                                        <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0"><img src={opt.imageUrl} className="w-full h-full object-cover"/></div>
+                                    <div key={idx} className={`${editingId === item.id ? 'w-full' : 'min-w-[85%] snap-center'} bg-white/85 backdrop-blur-md rounded-[24px] p-4 shadow-card border border-white/40 flex gap-3`}>
+                                        <div className="flex-1">
+                                            {editingId === item.id ? (
+                                                <input
+                                                    type="text"
+                                                    value={opt.activity}
+                                                    onChange={(e) => handleSaveTitle(item.id, e.target.value, idx)}
+                                                    className="text-base font-serif font-bold text-sabah-dark mb-1 bg-white/50 border-b border-sabah-blue/50 outline-none w-full rounded px-1"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            ) : (
+                                                <h3 className="text-base font-serif font-bold text-sabah-dark mb-1">
+                                                    {opt.activity}
+                                                </h3>
+                                            )}
+                                            <a href={opt.coords?.url || opt.imageUrl} target="_blank" className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-sabah-blue"><MapPin size={10}/> {opt.location}</a>
+                                        </div>
+                                        <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100">
+                                            {editingId === item.id ? 
+                                              <EditableImage src={opt.imageUrl} alt={opt.activity} onImageChange={(s) => handleSaveImage(item.id, s, idx)} className="w-full h-full" /> 
+                                              : <img src={opt.imageUrl} className="w-full h-full object-cover" onError={handleImageError}/>
+                                            }
+                                        </div>
+                                        {editingId === item.id && (
+                                            <div className="w-full mt-2">
+                                                <textarea value={opt.notes || ''} onChange={(e) => handleSaveNote(item.id, e.target.value, idx)} className="w-full text-xs bg-gray-50/50 rounded-lg p-2 border border-gray-100 outline-none h-16" placeholder={`備註 (${opt.activity})...`} />
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                              </div>
                          )}
-                         {(editingId === item.id || item.notes) && (
+                         {/* Only show parent note box if it's not a multi-option item or if editing generic notes */}
+                         {(!item.options || editingId !== item.id) && (editingId === item.id || item.notes) && (
                             <div className={`mt-2 p-3 rounded-xl border ${editingId === item.id ? 'bg-white border-sabah-blue/50' : 'bg-white/50 border-gray-100/50'}`}>
                                 {editingId === item.id ? (
                                     <textarea value={item.notes || ''} onChange={(e) => handleSaveNote(item.id, e.target.value)} className="w-full text-xs bg-transparent outline-none h-16" placeholder="輸入備註..." />
@@ -491,6 +591,7 @@
         const mapRef = useRef(null);
         const mapInstance = useRef(null);
         const markersRef = useRef([]);
+        const [markerCount, setMarkerCount] = useState(0);
 
         const activePlan = dayPlans.find(d => d.date === selectedDate);
         
@@ -524,24 +625,43 @@
             const bounds = L.latLngBounds([]);
 
             // Add Accommodation
-            const accMarker = L.marker([5.9904, 116.0798], { icon: houseIcon }).addTo(mapInstance.current).bindPopup('<b>住宿: Jesselton Quay</b>');
+            const accMarker = L.marker([5.9904, 116.0798], { icon: houseIcon }).addTo(mapInstance.current).bindPopup(`
+                <div style="font-family: 'Noto Sans TC', sans-serif; padding: 4px;">
+                    <h3 style="font-weight: 700; color: #2D3436; margin-bottom: 4px; font-size: 14px;">住宿: Jesselton Quay</h3>
+                    <div style="font-size: 11px; color: #666; margin-bottom: 4px;">Jesselton Quay, 88000 Kota Kinabalu</div>
+                    <a href="https://maps.app.goo.gl/3R1xZLhLTuicD3GB6" target="_blank" style="color: #0077BE; text-decoration: none; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                        開啟 Google Maps 
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </a>
+                </div>
+            `);
+            accMarker.bindTooltip('住宿: Jesselton Quay', { permanent: true, direction: 'bottom', className: 'custom-map-label' });
             markersRef.current.push(accMarker);
             bounds.extend([5.9904, 116.0798]);
 
             // Add Items
             activePlan.items.forEach(item => {
-                const addM = (lat, lng, title) => {
-                    const m = L.marker([lat, lng], { icon: createIcon('#F26B3A', false) }).addTo(mapInstance.current).bindPopup(`<b>${title}</b>`);
+                const addM = (lat, lng, title, url, address) => {
+                    const popupContent = `
+                        <div style="font-family: 'Noto Sans TC', sans-serif; padding: 4px;">
+                            <h3 style="font-weight: 700; color: #2D3436; margin-bottom: 4px; font-size: 14px;">${title}</h3>
+                            ${address ? `<div style="font-size: 11px; color: #666; margin-bottom: 4px;">${address}</div>` : ''}
+                            ${url ? `<a href="${url}" target="_blank" style="color: #0077BE; text-decoration: none; font-size: 12px; display: flex; align-items: center; gap: 4px;">開啟 Google Maps <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
+                        </div>
+                    `;
+                    const m = L.marker([lat, lng], { icon: createIcon('#F26B3A', false) }).addTo(mapInstance.current).bindPopup(popupContent);
+                    m.bindTooltip(title, { permanent: true, direction: 'bottom', className: 'custom-map-label' });
                     markersRef.current.push(m);
                     bounds.extend([lat, lng]);
                 };
-                if (item.coords) addM(item.coords.lat, item.coords.lng, item.activity);
-                if (item.options) item.options.forEach(opt => addM(opt.coords.lat, opt.coords.lng, opt.activity));
+                if (item.coords) addM(item.coords.lat, item.coords.lng, item.activity, item.coords.url, item.coords.address);
+                if (item.options) item.options.forEach(opt => addM(opt.coords.lat, opt.coords.lng, opt.activity, opt.coords.url || opt.imageUrl, opt.coords.address)); 
             });
 
             if (markersRef.current.length > 0) {
                 mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
             }
+            setMarkerCount(markersRef.current.length);
         }, [activePlan]);
 
         return (
@@ -549,7 +669,7 @@
                 <div ref={mapRef} className="w-full h-full" />
                 <div className="absolute top-4 left-4 right-4 z-[400] pointer-events-none">
                     <div className="bg-white/90 backdrop-blur-md p-4 rounded-[20px] shadow-soft border border-white/50 flex justify-between items-center">
-                        <div><h3 className="font-bold text-sabah-dark text-sm font-serif">今日地圖</h3><p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{markersRef.current.length} 個地點</p></div>
+                        <div><h3 className="font-bold text-sabah-dark text-sm font-serif">今日地圖</h3><p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{markerCount} 個地點</p></div>
                         <div className="bg-sabah-blue/10 p-2 rounded-full text-sabah-blue"><MapIcon size={20} /></div>
                     </div>
                 </div>
@@ -566,6 +686,14 @@
         const [method, setMethod] = useState('cash');
         const [isSplit, setIsSplit] = useState(false);
         const [filter, setFilter] = useState(null);
+
+        const CATEGORIES = [
+            { id: 'food', label: '飲食', icon: <Utensils size={16}/> },
+            { id: 'transport', label: '交通', icon: <Car size={16}/> },
+            { id: 'shopping', label: '購物', icon: <ShoppingBag size={16}/> },
+            { id: 'stay', label: '住宿', icon: <Home size={16}/> },
+            { id: 'other', label: '其他', icon: <MoreHorizontal size={16}/> }
+        ];
 
         const filtered = filter ? expenses.filter(e => e.payer === filter) : expenses;
         const totalTWD = filtered.reduce((s, e) => s + e.amountTWD, 0);
@@ -594,7 +722,10 @@
                        <div className="min-w-[100%] snap-center bg-sabah-dark rounded-[32px] p-6 text-white shadow-xl relative overflow-hidden">
                            <div className="flex justify-between items-start mb-2"><h2 className="text-gray-400 text-xs font-bold uppercase tracking-widest">總支出</h2><div className="flex gap-1"><button onClick={()=>setFilter(null)} className={`px-2 py-0.5 rounded text-[10px] border ${!filter?'bg-white text-sabah-dark':'border-gray-600'}`}>ALL</button><button onClick={()=>setFilter('JIA')} className={`px-2 py-0.5 rounded text-[10px] border ${filter==='JIA'?'bg-sabah-blue border-sabah-blue':'border-gray-600'}`}>JIA</button><button onClick={()=>setFilter('KIA')} className={`px-2 py-0.5 rounded text-[10px] border ${filter==='KIA'?'bg-sabah-orange border-sabah-orange':'border-gray-600'}`}>KIA</button></div></div>
                            <span className="text-4xl font-sans font-bold tracking-tight">NT$ {totalTWD.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
-                           <div className="mt-4 text-xs text-gray-400">MYR {totalMYR.toLocaleString()}</div>
+                           <div className="mt-4 flex justify-between items-end text-xs text-gray-400">
+                                <span>MYR {totalMYR.toLocaleString()}</span>
+                                <span className="font-mono opacity-60">匯率 {EXCHANGE_RATE}</span>
+                           </div>
                        </div>
                        <div className="min-w-[100%] snap-center bg-white rounded-[32px] p-6 text-sabah-dark shadow-xl border border-gray-100 flex flex-col justify-center">
                            <div className="flex justify-between items-center mb-4"><h2 className="text-gray-400 text-xs font-bold uppercase tracking-widest">分帳結算</h2><Users size={18} className="text-sabah-green"/></div>
@@ -615,7 +746,14 @@
                            <div className="text-right"><span className="text-[10px] text-gray-400">約 NT$</span> <span className="text-xl font-bold text-sabah-blue">{amount ? (parseFloat(amount)*EXCHANGE_RATE).toFixed(0) : '0'}</span></div>
                        </div>
                        <input type="text" value={desc} onChange={e=>setDesc(e.target.value)} placeholder="項目說明" className="w-full bg-white border-b-2 border-gray-100 p-3 text-sm mb-4 outline-none"/>
-                       <div className="grid grid-cols-5 gap-1 mb-4">{['food','transport','shopping','stay','other'].map(c=><button key={c} type="button" onClick={()=>setCat(c)} className={`py-2 rounded-xl text-[10px] font-bold border ${cat===c?'bg-sabah-dark text-white':'bg-white text-gray-400'}`}>{c}</button>)}</div>
+                       <div className="grid grid-cols-5 gap-2 mb-4">
+                           {CATEGORIES.map(c=>(
+                               <button key={c.id} type="button" onClick={()=>setCat(c.id)} className={`py-3 rounded-xl flex flex-col items-center justify-center gap-1 border transition-all ${cat===c.id?'bg-sabah-dark text-white shadow-lg scale-105 border-sabah-dark':'bg-white text-gray-400 border-gray-100 hover:bg-gray-50'}`}>
+                                   {c.icon}
+                                   <span className="text-[10px] font-bold">{c.label}</span>
+                               </button>
+                           ))}
+                       </div>
                        <div className="flex gap-3 mb-6">
                            <div className="flex bg-sabah-bg rounded-xl p-1"><button type="button" onClick={()=>setPayer('JIA')} className={`px-3 py-2 rounded-lg text-xs font-bold ${payer==='JIA'?'bg-sabah-blue text-white':'text-gray-400'}`}>JIA</button><button type="button" onClick={()=>setPayer('KIA')} className={`px-3 py-2 rounded-lg text-xs font-bold ${payer==='KIA'?'bg-sabah-orange text-white':'text-gray-400'}`}>KIA</button></div>
                            <button type="button" onClick={()=>setIsSplit(!isSplit)} className={`flex-1 rounded-xl flex items-center justify-center gap-2 text-xs font-bold border ${isSplit?'bg-sabah-green/10 text-sabah-green border-sabah-green':'text-gray-400 border-gray-200'}`}><Users size={14}/> 分帳</button>
@@ -641,41 +779,223 @@
 
       // --- ShoppingList ---
       const ShoppingList = () => {
-        const [locs, setLocs] = useState(INITIAL_SHOPPING_LOCATIONS);
-        const [items, setItems] = useState(INITIAL_SHOPPING_ITEMS);
-        const [expanded, setExpanded] = useState(false);
-        const [selItem, setSelItem] = useState(null);
+        // State initialized with localStorage or defaults
+        const [locs, setLocs] = useState(() => {
+            try {
+                const saved = localStorage.getItem('sabah_shopping_locs');
+                return saved ? JSON.parse(saved) : INITIAL_SHOPPING_LOCATIONS;
+            } catch(e) { return INITIAL_SHOPPING_LOCATIONS; }
+        });
+        const [items, setItems] = useState(() => {
+            try {
+                const saved = localStorage.getItem('sabah_shopping_items');
+                return saved ? JSON.parse(saved) : INITIAL_SHOPPING_ITEMS;
+            } catch(e) { return INITIAL_SHOPPING_ITEMS; }
+        });
+
+        // Persist changes
+        useEffect(() => localStorage.setItem('sabah_shopping_locs', JSON.stringify(locs)), [locs]);
+        useEffect(() => localStorage.setItem('sabah_shopping_items', JSON.stringify(items)), [items]);
+        
+        // UI State
+        const [expandedLocs, setExpandedLocs] = useState(false);
+        const [selItem, setSelItem] = useState(null); // For detail view
+
+        // Add Modal State
+        const [addType, setAddType] = useState(null); // 'location' | 'item' | null
+        const [formName, setFormName] = useState('');
+        const [formDesc, setFormDesc] = useState('');
+        const [formLink, setFormLink] = useState('');
+        const [formImg, setFormImg] = useState('');
+
+        const handleImageUpdate = (id, newSrc, type) => {
+            if (type === 'location') {
+                setLocs(prev => prev.map(l => l.id === id ? { ...l, imageUrl: newSrc } : l));
+            } else {
+                setItems(prev => prev.map(i => i.id === id ? { ...i, imageUrl: newSrc } : i));
+            }
+        };
+
+        const handleAddSubmit = (e) => {
+            e.preventDefault();
+            const newItem = {
+                id: Date.now().toString(),
+                name: formName,
+                description: formDesc,
+                imageUrl: formImg,
+                url: formLink, // Store map link directly
+                googleMapQuery: formLink, // Legacy support
+                type: addType === 'location' ? '自訂地點' : '自訂商品',
+                rating: 5
+            };
+            
+            if (addType === 'location') {
+                setLocs([...locs, newItem]);
+            } else {
+                setItems([...items, newItem]);
+            }
+            closeModal();
+        };
+
+        const closeModal = () => {
+            setAddType(null);
+            setFormName(''); setFormDesc(''); setFormLink(''); setFormImg('');
+        };
+        
+        const handleFileSelect = (e) => {
+             const file = e.target.files?.[0];
+             if (file) {
+                 const reader = new FileReader();
+                 reader.onloadend = () => setFormImg(reader.result);
+                 reader.readAsDataURL(file);
+             }
+        };
 
         return (
            <div className="px-6 pt-safe pb-32 animate-fade-in relative">
                <h2 className="text-3xl font-serif font-bold text-sabah-dark mb-6 mt-6">購物清單</h2>
-               <div className="bg-red-50/90 border border-red-100 rounded-[20px] p-5 mb-8 shadow-sm">
-                   <div className="flex items-center gap-2 mb-3 text-red-600"><AlertTriangle size={20}/><h3 className="font-bold text-sm">入境注意事項</h3></div>
-                   <div className="text-[10px] text-gray-600 space-y-1"><p>❌ 肉類製品 (含泡麵)</p><p>❌ 新鮮水果 (榴槤)</p></div>
-               </div>
-               <div className="mb-10">
-                   <div onClick={()=>setExpanded(!expanded)} className="flex justify-between items-center mb-4 cursor-pointer"><h3 className="text-lg font-serif font-bold text-sabah-dark flex gap-2"><MapPin size={18} className="text-sabah-blue"/>購物地點</h3>{expanded?<ChevronUp size={16}/>:<ChevronDown size={16}/>}</div>
-                   {expanded && <div className="flex flex-col gap-3 animate-fade-in">{locs.map(l=><div key={l.id} className="bg-white/90 rounded-2xl p-4 border border-white/50 flex gap-4"><div className="flex-1"><h4 className="font-bold text-sabah-dark">{l.name}</h4><p className="text-xs text-gray-500">{l.description}</p></div><div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden"><img src={l.imageUrl} className="w-full h-full object-cover"/></div></div>)}</div>}
-               </div>
-               <div className="grid grid-cols-2 gap-4">
-                   {items.map(i=>(
-                       <div key={i.id} onClick={()=>setSelItem(i)} className="bg-white/90 rounded-2xl p-3 shadow-card border border-white/50 cursor-pointer">
-                           <div className="aspect-square bg-gray-100 rounded-xl mb-3 overflow-hidden"><img src={i.imageUrl} className="w-full h-full object-cover"/></div>
-                           <h4 className="font-bold text-sabah-dark text-xs mb-1 line-clamp-1">{i.name}</h4>
-                           <p className="text-[10px] text-gray-500 line-clamp-2">{i.description}</p>
+               
+               {/* 1. 入境注意事項 (Entry Regulations) */}
+               <div className="bg-red-50/90 border border-red-200 rounded-[24px] p-5 mb-8 shadow-sm">
+                   <div className="flex items-center gap-2 mb-4 text-red-600 border-b border-red-100 pb-2">
+                       <AlertTriangle size={24}/>
+                       <h3 className="font-bold text-lg">入境台灣注意事項 (非常重要！)</h3>
+                   </div>
+                   <div className="space-y-4 text-sm text-gray-700">
+                       <div className="flex gap-3 items-start">
+                           <div className="text-xl pt-0.5">🥩</div>
+                           <div>
+                               <span className="font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded text-xs">肉類製品</span>
+                               <p className="mt-1 leading-relaxed text-xs">嚴禁 攜帶任何豬肉製品（肉乾、肉鬆、含肉的泡麵、含肉塊的肉骨茶包）。雞肉鬆、魚肉鬆 如果有完整商業包裝通常可以，但為了避免麻煩，建議盡量避免帶肉類。</p>
+                           </div>
                        </div>
-                   ))}
+                       <div className="flex gap-3 items-start">
+                           <div className="text-xl pt-0.5">🍋</div>
+                           <div>
+                               <span className="font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded text-xs">新鮮水果</span>
+                               <p className="mt-1 leading-relaxed text-xs">榴槤、山竹都 <span className="font-bold text-red-600">不能</span> 帶回台灣。只能在當地吃完，或是買加工過的（榴槤糖、榴槤巧克力、榴槤咖啡）。</p>
+                           </div>
+                       </div>
+                   </div>
                </div>
-               <button className="fixed bottom-24 right-6 w-14 h-14 bg-sabah-blue text-white rounded-full shadow-lg flex items-center justify-center z-40"><Plus size={28}/></button>
+
+               {/* 2. 購物地點 (Shopping Locations) */}
+               <div className="mb-10">
+                   <div className="flex justify-between items-center mb-4 cursor-pointer" onClick={()=>setExpandedLocs(!expandedLocs)}>
+                       <div className="flex items-center gap-2">
+                           <h3 className="text-xl font-serif font-bold text-sabah-dark flex gap-2"><MapPin size={20} className="text-sabah-blue"/>購物地點</h3>
+                           {expandedLocs?<ChevronUp size={16}/>:<ChevronDown size={16}/>}
+                       </div>
+                       <button onClick={(e)=>{e.stopPropagation(); setAddType('location');}} className="w-8 h-8 rounded-full bg-sabah-blue/10 text-sabah-blue flex items-center justify-center hover:bg-sabah-blue hover:text-white transition-colors"><Plus size={18}/></button>
+                   </div>
+                   
+                   {expandedLocs && (
+                       <div className="flex flex-col gap-3 animate-fade-in">
+                           {locs.map(l=>(
+                               <div key={l.id} className="bg-white/90 rounded-2xl p-4 border border-white/50 flex gap-4 shadow-sm">
+                                   <div className="flex-1 min-w-0">
+                                       <div className="flex items-center gap-2 mb-1">
+                                           <h4 className="font-bold text-sabah-dark truncate">{l.name}</h4>
+                                           {(l.url || l.googleMapQuery) && <a href={l.url || `https://www.google.com/maps/search/?api=1&query=${l.googleMapQuery}`} target="_blank" className="text-gray-400 hover:text-sabah-blue p-1"><MapPin size={14}/></a>}
+                                       </div>
+                                       <p className="text-xs text-gray-500 line-clamp-2">{l.description}</p>
+                                   </div>
+                                   <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+                                       <EditableImage src={l.imageUrl} alt={l.name} className="w-full h-full" onImageChange={(src)=>handleImageUpdate(l.id, src, 'location')} />
+                                   </div>
+                               </div>
+                           ))}
+                       </div>
+                   )}
+               </div>
+
+               {/* 3. 必買清單 (Must-buy List) */}
+               <div>
+                   <div className="flex justify-between items-center mb-4">
+                       <h3 className="text-xl font-serif font-bold text-sabah-dark flex gap-2"><ShoppingBag size={20} className="text-sabah-orange"/>必買清單</h3>
+                       <button onClick={()=>setAddType('item')} className="w-8 h-8 rounded-full bg-sabah-orange/10 text-sabah-orange flex items-center justify-center hover:bg-sabah-orange hover:text-white transition-colors"><Plus size={18}/></button>
+                   </div>
+                   <div className="grid grid-cols-2 gap-4">
+                       {items.map(i=>(
+                           <div key={i.id} className="bg-white/90 rounded-2xl p-3 shadow-card border border-white/50 relative group">
+                               <div className="aspect-square bg-gray-100 rounded-xl mb-3 overflow-hidden border border-gray-100">
+                                   {/* Long press enabled via EditableImage */}
+                                   <EditableImage src={i.imageUrl} alt={i.name} className="w-full h-full" onImageChange={(src)=>handleImageUpdate(i.id, src, 'item')} />
+                               </div>
+                               <div onClick={()=>setSelItem(i)} className="cursor-pointer">
+                                    <div className="flex justify-between items-start gap-1">
+                                        <h4 className="font-bold text-sabah-dark text-xs mb-1 line-clamp-1 flex-1">{i.name}</h4>
+                                        {(i.url || i.locationHint) && <MapPin size={10} className="text-gray-400 mt-0.5 flex-shrink-0"/>}
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 line-clamp-2">{i.description}</p>
+                               </div>
+                           </div>
+                       ))}
+                   </div>
+               </div>
+
+               {/* Modal: Item Detail */}
                {selItem && (
                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={()=>setSelItem(null)}></div>
                        <div className="bg-white rounded-[32px] p-6 w-full max-w-sm relative z-10 animate-[fadeIn_0.3s_ease-out]">
-                           <button onClick={()=>setSelItem(null)} className="absolute top-4 right-4"><X size={20} className="text-gray-500"/></button>
-                           <div className="aspect-[4/3] rounded-2xl bg-gray-100 overflow-hidden mb-5"><img src={selItem.imageUrl} className="w-full h-full object-cover"/></div>
+                           <button onClick={()=>setSelItem(null)} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full"><X size={16} className="text-gray-500"/></button>
+                           <div className="aspect-[4/3] rounded-2xl bg-gray-100 overflow-hidden mb-5 border border-gray-200">
+                               <img src={selItem.imageUrl} className="w-full h-full object-cover" onError={handleImageError}/>
+                           </div>
                            <h2 className="text-2xl font-serif font-bold text-sabah-dark mb-2">{selItem.name}</h2>
-                           <p className="text-sm text-gray-600 leading-relaxed">{selItem.description}</p>
+                           <p className="text-sm text-gray-600 leading-relaxed mb-4">{selItem.description}</p>
+                           {selItem.locationHint && <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 p-3 rounded-xl"><MapPin size={14}/> <span>{selItem.locationHint}</span></div>}
+                           {(selItem.url || selItem.googleMapQuery) && <a href={selItem.url || `https://www.google.com/maps/search/?api=1&query=${selItem.googleMapQuery}`} target="_blank" className="mt-3 flex items-center justify-center gap-2 w-full bg-sabah-blue text-white py-3 rounded-xl font-bold text-sm"><MapPin size={16}/> 查看地圖</a>}
                        </div>
+                   </div>
+               )}
+
+               {/* Modal: Add New */}
+               {addType && (
+                   <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeModal}></div>
+                       <form onSubmit={handleAddSubmit} className="bg-white rounded-[32px] p-6 w-full max-w-sm relative z-10 animate-[fadeIn_0.3s_ease-out] max-h-[90vh] overflow-y-auto">
+                           <h3 className="text-xl font-serif font-bold text-sabah-dark mb-4">新增{addType==='location'?'地點':'商品'}</h3>
+                           
+                           <div className="space-y-4">
+                               <div>
+                                   <label className="text-xs font-bold text-gray-500 block mb-1">名稱</label>
+                                   <input required value={formName} onChange={e=>setFormName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-sabah-blue transition-colors" placeholder="請輸入名稱..."/>
+                               </div>
+                               
+                               <div>
+                                   <label className="text-xs font-bold text-gray-500 block mb-1">描述</label>
+                                   <textarea value={formDesc} onChange={e=>setFormDesc(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-sabah-blue transition-colors h-24 resize-none" placeholder="請輸入描述..."/>
+                               </div>
+
+                               <div>
+                                   <label className="text-xs font-bold text-gray-500 block mb-1">Google Map 連結 (選填)</label>
+                                   <div className="relative">
+                                       <MapPin size={16} className="absolute left-3 top-3.5 text-gray-400"/>
+                                       <input value={formLink} onChange={e=>setFormLink(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 pl-9 text-sm outline-none focus:border-sabah-blue transition-colors" placeholder="https://maps.app.goo.gl/..."/>
+                                   </div>
+                               </div>
+
+                               <div>
+                                   <label className="text-xs font-bold text-gray-500 block mb-1">圖片</label>
+                                   <div className="flex items-center gap-4">
+                                       <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0">
+                                           {formImg ? <img src={formImg} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400"><ImageIcon size={24}/></div>}
+                                       </div>
+                                       <label className="flex-1 bg-white border border-gray-200 text-gray-600 font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-colors">
+                                           <Camera size={16}/> 上傳圖片
+                                           <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect}/>
+                                       </label>
+                                   </div>
+                               </div>
+                           </div>
+
+                           <div className="flex gap-3 mt-8">
+                               <button type="button" onClick={closeModal} className="flex-1 py-3 rounded-xl font-bold text-sm text-gray-500 bg-gray-100 hover:bg-gray-200">取消</button>
+                               <button type="submit" className="flex-1 py-3 rounded-xl font-bold text-sm text-white bg-sabah-blue shadow-lg shadow-blue-500/30 hover:bg-blue-600">新增</button>
+                           </div>
+                       </form>
                    </div>
                )}
            </div>
@@ -683,27 +1003,178 @@
       };
 
       // --- InfoPage ---
+      const InfoCard = ({ icon, title, children, colorClass="bg-white/90" }) => (
+         <div className={`${colorClass} p-5 rounded-[24px] shadow-card border border-white/40`}>
+             <div className="flex items-center gap-3 mb-3">
+                 <div className="bg-gray-100/50 p-2 rounded-full">{icon}</div>
+                 <h3 className="font-serif font-bold text-sabah-dark">{title}</h3>
+             </div>
+             <div className="text-sm text-gray-600 space-y-2 font-sans">{children}</div>
+         </div>
+      );
+
       const InfoPage = () => {
-         const [checklist, setChecklist] = useState([
-             {id:1, text:"護照 > 6個月", checked:false}, {id:2, text:"MDAC 入境卡", checked:false}, {id:3, text:"萬用轉接頭", checked:false}, {id:4, text:"Grab App", checked:false}
-         ]);
+         const DEFAULT_CHECKLIST = [
+             {id: 1, text: "護照 (效期 > 6個月)", checked: false},
+             {id: 2, text: "MDAC 電子入境卡填寫", checked: false},
+             {id: 3, text: "機票電子檔存手機", checked: false},
+             {id: 4, text: "萬用轉接頭 (英規三孔)", checked: false},
+             {id: 5, text: "Grab App 下載並綁卡", checked: false},
+             {id: 6, text: "台幣現金 (約 NT$ 10,000)", checked: false},
+             {id: 7, text: "腸胃藥 / 暈船藥 / 防蚊液", checked: false}
+         ];
+
+         const [checklist, setChecklist] = useState(() => {
+             const saved = localStorage.getItem('sabah_checklist');
+             return saved ? JSON.parse(saved) : DEFAULT_CHECKLIST;
+         });
          const [txt, setTxt] = useState("");
+
+         useEffect(() => {
+             localStorage.setItem('sabah_checklist', JSON.stringify(checklist));
+         }, [checklist]);
+
+         const addCheckItem = () => {
+             if (!txt.trim()) return;
+             setChecklist([...checklist, { id: Date.now(), text: txt, checked: false }]);
+             setTxt("");
+         };
+
+         const toggleCheck = (id) => {
+             setChecklist(checklist.map(i => i.id === id ? { ...i, checked: !i.checked } : i));
+         };
+         
+         const deleteCheck = (id) => {
+             setChecklist(checklist.filter(i => i.id !== id));
+         };
+
          return (
-             <div className="px-6 pt-safe pb-24 animate-fade-in space-y-4">
-                 <h2 className="text-3xl font-serif font-bold text-sabah-dark mb-6 mt-6">旅遊資訊</h2>
-                 <div className="bg-white/90 p-5 rounded-[24px] shadow-card"><div className="flex gap-3 mb-3"><FileText className="text-sabah-blue"/><h3 className="font-bold">入境 & 簽證</h3></div><p className="text-sm text-gray-600">MDAC 必填。護照效期 > 6個月。</p></div>
-                 <div className="bg-white/90 p-5 rounded-[24px] shadow-card"><div className="flex gap-3 mb-3"><Plug className="text-blue-500"/><h3 className="font-bold">電壓 & 插座</h3></div><p className="text-sm text-gray-600">英規三孔 (Type G)。220V。</p></div>
+             <div className="px-6 pt-safe pb-24 animate-fade-in space-y-6">
+                 <h2 className="text-3xl font-serif font-bold text-sabah-dark mb-2 mt-6">旅遊資訊 & 檢查表</h2>
+                 
+                 {/* 1. 入境與簽證 */}
+                 <InfoCard icon={<FileText className="text-red-500"/>} title="入境與簽證 (必辦!)" colorClass="bg-red-50/80 border-red-100">
+                     <p className="font-bold text-red-600 mb-1">電子入境卡 (MDAC)：強制填寫</p>
+                     <ul className="list-disc list-outside ml-4 space-y-1 text-xs">
+                        <li>時間：抵達前 3天內 上網填寫。</li>
+                        <li>方式：填寫後檢查 Email，截圖或列印 PDF。</li>
+                        <li>護照：須有 6個月以上 有效期限。</li>
+                        <li>回程機票：建議存電子機票備查。</li>
+                     </ul>
+                 </InfoCard>
+
+                 {/* 2. 貨幣 */}
+                 <InfoCard icon={<Banknote className="text-sabah-green"/>} title="貨幣與換匯 (MYR)">
+                     <div className="space-y-2 text-xs">
+                        <p>❌ <span className="font-bold">台灣：</span>匯率差，不建議大量兌換。</p>
+                        <p>⚠️ <span className="font-bold">亞庇機場：</span>匯率普通，僅換小額 (RM 50-100) 付車資。</p>
+                        <p>✅ <span className="font-bold">市區換匯：</span>推薦 <span className="font-bold text-sabah-blue">Wisma Merdeka</span>，匯率最佳，帶台幣去換。</p>
+                        <div className="bg-gray-100 p-2 rounded-lg mt-2">
+                           <p><span className="font-bold">現金：</span>茶室、夜市、跳島雜費。</p>
+                           <p><span className="font-bold">刷卡/Grab：</span>百貨、超市、大餐廳。</p>
+                        </div>
+                     </div>
+                 </InfoCard>
+
+                 {/* 3. 電壓與網路 */}
+                 <InfoCard icon={<Plug className="text-sabah-blue"/>} title="電壓與網路">
+                     <div className="flex gap-4 items-start">
+                         <div className="flex-1 text-xs space-y-1">
+                             <p><span className="font-bold">插座：</span>英規三孔 (Type G) 🔌。</p>
+                             <p className="text-red-500 font-bold">⚠️ 務必攜帶萬用轉接頭。</p>
+                             <p><span className="font-bold">電壓：</span>220V (手機/相機變壓器通常通用)。</p>
+                             <p><span className="font-bold">網卡：</span>Digi 或 Celcom 訊號較穩。</p>
+                         </div>
+                     </div>
+                 </InfoCard>
+
+                 {/* 4. 交通 */}
+                 <InfoCard icon={<Car className="text-sabah-orange"/>} title="交通移動">
+                     <div className="text-xs space-y-1">
+                        <p className="font-bold">必載 App：Grab (綁定信用卡)</p>
+                        <p>交通：17:00-19:00 市區易塞車，看夕陽請提早。</p>
+                        <p>行人：車速快，過馬路請舉手示意。</p>
+                     </div>
+                 </InfoCard>
+
+                 {/* 5. 文化與穿著 */}
+                 <InfoCard icon={<Shirt className="text-purple-500"/>} title="穿著與文化">
+                     <ul className="list-disc list-outside ml-4 space-y-1 text-xs">
+                         <li><span className="font-bold">清真寺：</span>嚴禁暴露 (不可露肩/腿/肚)，女性需包頭巾 (現場可租長袍)。</li>
+                         <li><span className="font-bold">右手原則：</span>遞東西、握手、進食請用「右手」。</li>
+                         <li><span className="font-bold">指人：</span>用「大拇指」示意，勿用食指。</li>
+                     </ul>
+                 </InfoCard>
+
+                 {/* 6. 衛生與健康 */}
+                 <InfoCard icon={<Heart className="text-pink-500"/>} title="衛生與健康">
+                     <ul className="list-disc list-outside ml-4 space-y-1 text-xs">
+                         <li><span className="font-bold text-red-500">水：自來水不可生飲 🚰。</span></li>
+                         <li><span className="font-bold">藥品：</span>腸胃藥 (口味重)、暈船藥、止痛藥。</li>
+                         <li><span className="font-bold">廁所：</span>多為水沖式，建議隨身帶面紙。</li>
+                     </ul>
+                 </InfoCard>
+
+                 {/* 7. 行程叮嚀 */}
+                 <InfoCard icon={<Sun className="text-sabah-yellow"/>} title="行程特別叮嚀">
+                     <div className="space-y-3 text-xs">
+                         <div>
+                             <p className="font-bold text-sabah-blue mb-1">🏝️ 跳島 (沙比/馬努干)</p>
+                             <p>防曬、速乾毛巾、防水袋。怕痛可穿溯溪鞋。勿踩珊瑚。</p>
+                         </div>
+                         <div>
+                             <p className="font-bold text-green-600 mb-1">🐒 雨林 (長鼻猴/螢火蟲)</p>
+                             <p>紅樹林蚊蟲兇猛，<span className="font-bold">噴強效防蚊液</span>。看螢火蟲時手機調暗，<span className="text-red-500 font-bold">嚴禁閃光燈</span>。</p>
+                         </div>
+                     </div>
+                 </InfoCard>
+
+                 {/* 8. 入境規定 */}
+                 <div className="bg-white/90 rounded-[24px] shadow-card border border-white/40 overflow-hidden">
+                     <div className="bg-gray-100 px-5 py-3 flex items-center gap-2">
+                        <AlertTriangle size={18} className="text-red-500"/>
+                        <h3 className="font-serif font-bold text-sabah-dark">回台入境規定</h3>
+                     </div>
+                     <table className="w-full text-xs text-left">
+                         <tbody>
+                             <tr className="border-b border-gray-100">
+                                 <td className="p-3 font-bold text-gray-500">肉類</td>
+                                 <td className="p-3">
+                                     <div className="text-red-500 font-bold">❌ 嚴禁攜帶</div>
+                                     <div className="text-gray-400 text-[10px]">肉骨茶包(含肉)、肉乾、火腿</div>
+                                     <div className="text-green-600 font-bold mt-1">✅ 可攜帶</div>
+                                     <div className="text-gray-400 text-[10px]">純藥材湯包/粉</div>
+                                 </td>
+                             </tr>
+                             <tr className="border-b border-gray-100">
+                                 <td className="p-3 font-bold text-gray-500">水果</td>
+                                 <td className="p-3">
+                                     <div className="text-red-500 font-bold">❌ 新鮮水果</div>
+                                     <div className="text-gray-400 text-[10px]">榴槤、山竹</div>
+                                 </td>
+                             </tr>
+                         </tbody>
+                     </table>
+                 </div>
+
+                 {/* 9. 檢查清單 */}
                  <div className="bg-sabah-dark text-white p-5 rounded-[24px]">
-                     <h3 className="font-bold mb-4 flex gap-2"><Check className="text-sabah-green"/> 出發檢查</h3>
+                     <h3 className="font-bold mb-4 flex gap-2 items-center"><Check className="text-sabah-green"/> 出發前最後檢查</h3>
                      <div className="space-y-2 mb-4">
-                         {checklist.map(i=>(
-                             <div key={i.id} onClick={()=>setChecklist(p=>p.map(x=>x.id===i.id?{...x,checked:!x.checked}:x))} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 cursor-pointer">
-                                 <div className={`w-5 h-5 rounded border flex items-center justify-center ${i.checked?'bg-sabah-green border-sabah-green':'border-gray-300'}`}>{i.checked&&<Check size={14} className="text-white"/>}</div>
-                                 <span className={`text-sm text-sabah-dark ${i.checked?'line-through opacity-50':''}`}>{i.text}</span>
+                         {checklist.map(i => (
+                             <div key={i.id} className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur rounded-xl border border-white/10 group">
+                                 <div onClick={() => toggleCheck(i.id)} className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center cursor-pointer transition-colors ${i.checked ? 'bg-sabah-green border-sabah-green' : 'border-gray-400'}`}>
+                                     {i.checked && <Check size={14} className="text-white"/>}
+                                 </div>
+                                 <span onClick={() => toggleCheck(i.id)} className={`flex-1 text-sm cursor-pointer ${i.checked ? 'line-through opacity-40' : 'opacity-90'}`}>{i.text}</span>
+                                 <button onClick={() => deleteCheck(i.id)} className="text-gray-500 opacity-50 hover:opacity-100 p-1"><X size={14}/></button>
                              </div>
                          ))}
                      </div>
-                     <div className="flex gap-2"><input value={txt} onChange={e=>setTxt(e.target.value)} placeholder="新增..." className="flex-1 bg-white/10 rounded-xl px-4 py-3 text-sm text-white"/><button onClick={()=>{if(txt)setChecklist(p=>[...p,{id:Date.now(),text:txt,checked:false}]);setTxt('')}} className="bg-sabah-blue p-3 rounded-xl"><Plus/></button></div>
+                     <div className="flex gap-2">
+                         <input value={txt} onChange={e => setTxt(e.target.value)} placeholder="新增檢查項目..." className="flex-1 bg-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-400 outline-none focus:bg-white/20 transition-all"/>
+                         <button onClick={addCheckItem} className="bg-sabah-blue p-3 rounded-xl shadow-lg hover:bg-blue-600 active:scale-95 transition-all"><Plus className="text-white"/></button>
+                     </div>
                  </div>
              </div>
          );
@@ -743,13 +1214,16 @@
                  </div>
                  
                  {activeTab === 'plan' && (
-                    <div className="relative z-20 bg-white/30 backdrop-blur-md shadow-sm border-b border-white/20 pb-2">
-                       <div className="pt-safe pb-1 text-center mb-2"><h2 className="text-2xl font-serif font-bold text-sabah-dark mt-3">Sabah | 亞庇海中遊</h2></div>
-                       <div className="flex items-center justify-between px-2">
-                           <div className="flex-1 overflow-hidden"><DateSelector days={dayPlans} selectedDate={selectedDate} onSelectDate={setSelectedDate} /></div>
-                           <div className="flex flex-col items-end pl-2 pr-4 gap-1 min-w-[80px]">
-                               <span className="bg-sabah-blue/90 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">MALAYSIA</span>
-                               <div className="flex items-center gap-1.5 bg-white/90 px-2 py-1 rounded-lg"><Sun size={14} className="text-sabah-yellow"/><div className="flex flex-col items-end leading-none"><span className="text-xs font-bold text-sabah-dark">{currentDayPlan.weatherTemp}°C</span><span className="text-[8px] text-gray-400">{currentDayPlan.weatherCondition}</span></div></div>
+                    <div className="relative z-20 bg-white/30 backdrop-blur-md shadow-sm border-b border-white/20 pb-4 pt-safe flex flex-col gap-4">
+                       <div className="text-center mt-6 px-4"><h2 className="text-2xl font-serif font-bold text-sabah-dark tracking-wide">Sabah | 亞庇海中遊</h2></div>
+                       <div className="flex items-end justify-between px-4 gap-3">
+                           <div className="flex-1 overflow-hidden min-w-0"><DateSelector days={dayPlans} selectedDate={selectedDate} onSelectDate={setSelectedDate} /></div>
+                           <div className="flex flex-col items-end gap-2 pb-1 flex-shrink-0">
+                               <span className="bg-sabah-blue text-white px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider shadow-sm">MALAYSIA</span>
+                               <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-2.5 py-1.5 rounded-xl border border-white/40 shadow-sm">
+                                   <Sun size={16} className="text-sabah-yellow"/>
+                                   <div className="flex flex-col items-end leading-none"><span className="text-sm font-bold text-sabah-dark">{currentDayPlan.weatherTemp}°</span><span className="text-[8px] text-gray-500 uppercase">{currentDayPlan.weatherCondition}</span></div>
+                               </div>
                            </div>
                        </div>
                     </div>
