@@ -1,1135 +1,788 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Sabah Travel Companion</title>
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-    <style>
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #1a202c; /* gray-900 */
-            overscroll-behavior-y: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .font-serif-tc { font-family: 'Noto Serif TC', serif; }
-        .font-sans-tc { font-family: 'Noto Sans TC', sans-serif; }
-        
-        /* Hide scrollbar */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
-
-        /* Custom Leaflet Icons via CSS/JS injection */
-        .custom-user-location {
-            background-color: #0077BE; width: 18px; height: 18px; border-radius: 50%;
-            border: 3px solid white; box-shadow: 0 0 15px rgba(0, 119, 190, 0.5);
-        }
-        .custom-house-icon {
-            background-color: #F26B3A; width: 32px; height: 32px; border-radius: 50%;
-            border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            display: flex; align-items: center; justify-content: center; color: white;
-        }
-        
-        /* Accordion transition */
-        .accordion-content { transition: max-height 0.3s ease-out, opacity 0.3s ease-out; max-height: 0; opacity: 0; overflow: hidden; }
-        .accordion-content.open { max-height: 500px; opacity: 1; }
-    </style>
+    <!-- Babel for JSX compilation in browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        sabah: {
-                            bg: '#F9F9F7',
-                            yellow: '#F3C969',
-                            orange: '#F26B3A',
-                            blue: '#0077BE',
-                            lightblue: '#89CFF0',
-                            green: '#508A75',
-                            dark: '#2D3436',
-                            gray: '#A0A0A0'
-                        }
-                    },
-                    fontFamily: {
-                        serif: ['"Noto Serif TC"', 'serif'],
-                        sans: ['"Noto Sans TC"', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
-                        'card': '0 4px 20px -2px rgba(0,0,0,0.05)'
-                    }
-                }
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              sabah: {
+                bg: '#F9F9F7',       
+                yellow: '#F3C969',   
+                orange: '#F26B3A',   
+                blue: '#0077BE',     
+                lightblue: '#89CFF0',
+                green: '#508A75',    
+                dark: '#2D3436',
+                gray: '#A0A0A0'
+              }
+            },
+            fontFamily: {
+              serif: ['"Noto Serif TC"', 'serif'],
+              sans: ['"Noto Sans TC"', 'sans-serif'],
+            },
+            boxShadow: {
+              'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
+              'card': '0 4px 20px -2px rgba(0,0,0,0.05)'
             }
+          }
         }
+      }
     </script>
+
+    <style>
+      body {
+        font-family: 'Noto Sans TC', sans-serif;
+        background-color: #111827;
+        overscroll-behavior-y: none;
+        margin: 0;
+        padding: 0;
+      }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      
+      .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+
+      /* Custom Map Marker Styles */
+      .custom-user-location div { animation: pulse-blue 2s infinite; }
+      @keyframes pulse-blue {
+        0% { box-shadow: 0 0 0 0 rgba(0, 119, 190, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(0, 119, 190, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 119, 190, 0); }
+      }
+    </style>
 <script type="importmap">
 {
   "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "react": "https://aistudiocdn.com/react@^19.2.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
-    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.1",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
-    "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4",
-    "react-leaflet": "https://aistudiocdn.com/react-leaflet@^5.0.0"
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "react-leaflet": "https://esm.sh/react-leaflet@^5.0.0",
+    "leaflet": "https://esm.sh/leaflet@^1.9.4",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1"
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
 <body>
+    <div id="root"></div>
 
-    <!-- App Container -->
-    <div class="flex justify-center min-h-[100dvh] font-sans text-sabah-dark">
-        <div class="w-full max-w-[480px] h-[100dvh] relative shadow-2xl overflow-hidden flex flex-col bg-sabah-bg" id="app-root">
-            
-            <!-- Dynamic Background -->
-            <div id="bg-layer" class="absolute inset-0 z-0">
-                <!-- Injected via JS -->
-            </div>
+    <script type="text/babel" data-type="module">
+      // Import Dependencies from esm.sh
+      import React, { useState, useEffect, useRef, useMemo } from 'https://esm.sh/react@18.2.0';
+      import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
+      import { HashRouter } from 'https://esm.sh/react-router-dom@6.22.3?external=react,react-dom';
+      import L from 'https://esm.sh/leaflet@1.9.4';
+      import { 
+        Calendar, Map as MapIcon, Wallet, ShoppingBag, Info, Cloud, Sun, CloudRain,
+        MapPin, Clock, Plane, ArrowRight, Pencil, Check, X, ArrowDown, GripVertical, Image as ImageIcon,
+        Plus, Coffee, Car, Home, ArrowRightLeft, CreditCard, Banknote, Users, Trash2,
+        Star, AlertTriangle, ChevronDown, ChevronUp, Phone, Plug, FileText, User, Heart
+      } from 'https://esm.sh/lucide-react@0.363.0?external=react';
 
-            <!-- Header -->
-            <div id="header-container" class="relative z-20 transition-all duration-300">
-                <!-- Injected via JS -->
-            </div>
+      // ----------------------------------------------------------------------
+      // Constants & Data
+      // ----------------------------------------------------------------------
+      const EXCHANGE_RATE = 7.5;
 
-            <!-- Main Content -->
-            <main id="main-content" class="flex-1 overflow-y-auto no-scrollbar relative z-10 w-full">
-                <!-- Injected via JS -->
-            </main>
+      const LOCATIONS = {
+        BKI_AIRPORT: { lat: 5.9375, lng: 116.0510, name: "亞庇國際機場 (BKI)", url: "https://maps.app.goo.gl/ePJZ5U5xeFCmF2hU8" },
+        JESSELTON_QUAY: { lat: 5.9904, lng: 116.0798, name: "Jesselton Quay (JQ)", url: "https://maps.app.goo.gl/3R1xZLhLTuicD3GB6" },
+        BORENOS_CHICKEN: { lat: 5.9760, lng: 116.0738, name: "Borenos Fried Chicken", url: "https://maps.app.goo.gl/TxwxbFrYLVCmYscd8" },
+        FOOK_YUEN_GAYA: { lat: 5.9845, lng: 116.0775, name: "富源茶餐廳 Fook Yuen", url: "https://maps.app.goo.gl/EuUbbkmhpq9Sqvrk9" },
+        YEE_FUNG_LAKSA: { lat: 5.9830, lng: 116.0770, name: "怡豐茶室 Yee Fung Laksa", url: "https://maps.app.goo.gl/WnxZrPhzcoAmS2GNA" },
+        WISMA_MERDEKA: { lat: 5.9856, lng: 116.0777, name: "Wisma Merdeka", url: "https://maps.app.goo.gl/Z1wmwJvYJyEGGrAM9" },
+        JESSELTON_POINT: { lat: 5.9890, lng: 116.0780, name: "Jesselton Point 碼頭", url: "https://maps.app.goo.gl/V9jC4SENVnXqVkgd7" },
+        MANUKAN_ISLAND: { lat: 5.9644, lng: 116.0076, name: "Manukan 馬努干島", url: "https://maps.app.goo.gl/2YudfdqDXmGzBn5H6" },
+        SAPI_ISLAND: { lat: 5.9606, lng: 116.0048, name: "Sapi 沙比島", url: "https://maps.app.goo.gl/EepQ76LKkaCKMedr7" },
+        YU_KEE_BAK_KUT_TEH: { lat: 5.9840, lng: 116.0772, name: "佑記肉骨茶 Yu Kee", url: "https://maps.app.goo.gl/91JKY3SXBkZMh5KP6" },
+        SIN_KEE_BAK_KUT_TEH: { lat: 5.9825, lng: 116.0770, name: "新記肉骨茶 Sin Kee", url: "https://maps.app.goo.gl/aAfNCokREo4Ef5PCA" },
+        API_API_NIGHT_MARKET: { lat: 5.9835, lng: 116.0772, name: "加雅街夜市", url: "https://maps.app.goo.gl/XAuWddgRy8R4Qoj69" },
+        WOO_CAFE: { lat: 5.9818, lng: 116.0785, name: "Woo! Cafe", url: "https://maps.app.goo.gl/XS1iXNaWkPyEPGcy7" },
+        GUANS_KOPITIAM: { lat: 5.9835, lng: 116.0775, name: "源茶室 Guan's Kopitiam", url: "https://maps.app.goo.gl/KNiTh3YnwaHwHHy18" },
+        UMS_MOSQUE: { lat: 6.0367, lng: 116.1186, name: "沙巴大學粉紅清真寺", url: "https://maps.app.goo.gl/LpWEkTrs3vzVogNy8" },
+        JIA_XIANG_LINTAS: { lat: 5.9490, lng: 116.0920, name: "家香生肉麵", url: "https://maps.app.goo.gl/dH28jaQhk65kTVbc6" },
+        IMAGO_MALL: { lat: 5.9705, lng: 116.0667, name: "Imago Shopping Mall", url: "https://maps.app.goo.gl/Xaix69z83tSxYWX79" },
+        TANJUNG_ARU_BEACH: { lat: 5.9482, lng: 116.0447, name: "丹絨亞路海灘 Beach 2", url: "https://maps.app.goo.gl/bDrPDVcMoYZ49HvJA" },
+        WELCOME_SEAFOOD: { lat: 5.9765, lng: 116.0740, name: "大茄來海鮮", url: "https://maps.app.goo.gl/yhW1Uk42XVnLD8oQ9" },
+        KAMA_SPA: { lat: 5.9815, lng: 116.0782, name: "Kama'A Spa", url: "https://maps.app.goo.gl/Mxi3rzqiDZf4rFFCA" }
+      };
 
-            <!-- Bottom Navigation -->
-            <nav class="relative z-50 bg-white/95 backdrop-blur-xl border-t border-gray-100 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-                <div class="flex justify-between items-center px-4 py-2" id="nav-container">
-                    <!-- Injected via JS -->
-                </div>
-            </nav>
-
-            <!-- Splash Screen -->
-            <div id="splash-screen" class="fixed inset-0 z-[100] cursor-pointer bg-black flex flex-col items-center justify-center text-white text-center p-8 transition-opacity duration-500" onclick="App.dismissSplash()">
-                <img src="https://i.pinimg.com/736x/a1/68/29/a168297e14852587d40f2ac06dd2a1e5.jpg" alt="Splash" class="absolute inset-0 w-full h-full object-cover opacity-90">
-                <div class="absolute inset-0 bg-black/20 backdrop-blur-[2px]"></div>
-                <div class="relative z-10 space-y-4 animate-fade-in">
-                    <p class="text-xl font-sans tracking-[0.3em] font-light uppercase opacity-90">Welcome to</p>
-                    <h1 class="text-6xl font-serif font-black tracking-wider drop-shadow-2xl">SABAH</h1>
-                    <div class="w-12 h-1 bg-white/80 mx-auto rounded-full mt-6"></div>
-                    <p class="text-xs font-sans mt-8 opacity-70 animate-pulse">點擊任意處開始</p>
-                </div>
-            </div>
-
-            <!-- Modals -->
-            <div id="modal-container" class="fixed inset-0 z-[60] hidden pointer-events-none">
-                <div class="absolute inset-0 bg-black/40 backdrop-blur-sm pointer-events-auto transition-opacity" onclick="App.closeModal()"></div>
-                <div id="modal-content" class="absolute bg-white rounded-[32px] p-6 w-full max-w-sm left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto shadow-2xl transition-all scale-95 opacity-0">
-                    <!-- Dynamic Content -->
-                </div>
-            </div>
-            
-            <!-- Note Editor Modal specific -->
-             <div id="note-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
-                <div class="bg-white w-full max-w-sm rounded-2xl p-4 shadow-xl">
-                    <h3 class="font-bold text-lg mb-2 text-sabah-dark">編輯備註</h3>
-                    <textarea id="note-input" class="w-full h-24 p-3 border border-gray-200 rounded-xl resize-none text-sm outline-none focus:border-sabah-blue mb-4" placeholder="輸入內容..."></textarea>
-                    <div class="flex justify-end gap-2">
-                        <button onclick="App.closeNoteModal()" class="px-4 py-2 rounded-xl bg-gray-100 text-gray-500 font-bold text-xs">取消</button>
-                        <button onclick="App.saveNote()" class="px-4 py-2 rounded-xl bg-sabah-blue text-white font-bold text-xs">儲存</button>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-<script>
-/**
- * DATA & CONSTANTS
- */
-const LOCATIONS = {
-  BKI_AIRPORT: { lat: 5.9375, lng: 116.0510, name: "Kota Kinabalu International Airport" },
-  JESSELTON_QUAY: { lat: 5.9904, lng: 116.0798, name: "Jesselton Quay (JQ)" },
-  BORENOS_CHICKEN: { lat: 5.9760, lng: 116.0738, name: "Borenos Fried Chicken (Asia City)" },
-  FOOK_YUEN_GAYA: { lat: 5.9845, lng: 116.0775, name: "Fook Yuen (Gaya Street)" },
-  YEE_FUNG_LAKSA: { lat: 5.9830, lng: 116.0770, name: "Yee Fung Laksa" },
-  WISMA_MERDEKA: { lat: 5.9856, lng: 116.0777, name: "Wisma Merdeka" },
-  JESSELTON_POINT: { lat: 5.9890, lng: 116.0780, name: "Jesselton Point Ferry Terminal" },
-  MANUKAN_ISLAND: { lat: 5.9644, lng: 116.0076, name: "Manukan Island" },
-  SAPI_ISLAND: { lat: 5.9606, lng: 116.0048, name: "Sapi Island" },
-  YU_KEE_BAK_KUT_TEH: { lat: 5.9840, lng: 116.0772, name: "Yu Kee Bak Kut Teh" },
-  SIN_KEE_BAK_KUT_TEH: { lat: 5.9825, lng: 116.0770, name: "Sin Kee Bak Kut Teh" },
-  API_API_NIGHT_MARKET: { lat: 5.9835, lng: 116.0772, name: "Api-Api Night Market (Gaya St)" },
-  WOO_CAFE: { lat: 5.9818, lng: 116.0785, name: "Woo!" },
-  GUANS_KOPITIAM: { lat: 5.9835, lng: 116.0775, name: "Guan's Kopitiam" },
-  UMS_MOSQUE: { lat: 6.0367, lng: 116.1186, name: "UMS Pink Mosque" },
-  JIA_XIANG_LINTAS: { lat: 5.9490, lng: 116.0920, name: "Jia Xiang Sang Nyuk Mee (Lintas)" },
-  IMAGO_MALL: { lat: 5.9705, lng: 116.0667, name: "Imago Shopping Mall" },
-  TANJUNG_ARU_BEACH: { lat: 5.9482, lng: 116.0447, name: "Tanjung Aru Beach" },
-  WELCOME_SEAFOOD: { lat: 5.9765, lng: 116.0740, name: "Welcome Seafood" },
-  KAMA_SPA: { lat: 5.9815, lng: 116.0782, name: "Kama' A Rejuvenation & Wellbeing Spa" }
-};
-
-const INITIAL_ITINERARY = [
-  {
-    date: '2026-01-09', weatherTemp: 27, weatherCondition: 'Cloudy',
-    bgImage: 'https://i.pinimg.com/736x/a4/ae/3f/a4ae3f8d0c49e9cbf2e725a42e6d24ba.jpg',
-    flight: {
-      departureTime: '19:15', departureCode: 'TPE', departureAirport: '台灣桃園國際機場 ｜T1航廈',
-      arrivalTime: '22:50', arrivalCode: 'BKI', arrivalAirport: '哥打京那巴魯國際機場｜T1航廈',
-      airline: '馬來西亞亞洲航空公司 AK1511', flightNumber: 'AK1511', aircraft: '經濟艙 空中巴士 A320-212'
-    },
-    items: [
-      { id: '1-1', time: '22:30', activity: '抵達亞庇國際機場 (BKI)', location: 'Kota Kinabalu International Airport', coords: LOCATIONS.BKI_AIRPORT, type: 'transport' },
-      { id: '1-2', time: '23:30', activity: '抵達住宿 Jesselton Quay (JQ)', location: 'Jesselton Quay, Jalan Tun Fuad Stephens', coords: LOCATIONS.JESSELTON_QUAY, type: 'relax' },
-      { id: '1-3', time: '23:50', activity: '宵夜 (二選一)', location: 'Swipe to view options', coords: LOCATIONS.BORENOS_CHICKEN, type: 'food', options: [
-          { activity: 'Borenos Fried Chicken', location: 'Lot G23, Kompleks Asia City', coords: LOCATIONS.BORENOS_CHICKEN, notes: '在地好吃炸雞，開到半夜', imageUrl: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=500&auto=format&fit=crop' },
-          { activity: '富源茶餐廳 Fook Yuen', location: '53, Jalan Gaya', coords: LOCATIONS.FOOK_YUEN_GAYA, notes: '咖椰吐司、拉茶，開到很晚', imageUrl: 'https://images.unsplash.com/photo-1589301760588-441b6f5e71a9?q=80&w=500&auto=format&fit=crop' }
-      ]}
-    ]
-  },
-  {
-    date: '2026-01-10', weatherTemp: 31, weatherCondition: 'Sunny',
-    bgImage: 'https://i.pinimg.com/1200x/39/b4/aa/39b4aa96ca7fe7de41f28623af1eaf8b.jpg',
-    items: [
-      { id: '2-1', time: '09:15', activity: '早餐：怡豐茶室 Yee Fung Laksa', location: '127, Jalan Gaya', coords: LOCATIONS.YEE_FUNG_LAKSA, type: 'food', notes: '必點：叻沙 Laksa、沙煲雞飯', imageUrl: 'https://images.unsplash.com/photo-1632204655513-3392e2124508?q=80&w=500&auto=format&fit=crop' },
-      { id: '2-2', time: '10:00', activity: '換錢：Wisma Merdeka', location: 'Wisma Merdeka, Jalan Tun Razak', coords: LOCATIONS.WISMA_MERDEKA, type: 'activity', notes: '匯率最好，換完直接走去旁邊碼頭' },
-      { id: '2-3', time: '10:30', activity: '出海：Jesselton Point 碼頭', location: 'Jesselton Point Ferry Terminal', coords: LOCATIONS.JESSELTON_POINT, type: 'transport', notes: '購票：Two Islands - Sapi + Manukan' },
-      { id: '2-4', time: '11:00', activity: '雙島慢遊 (Manukan & Sapi)', location: 'Tunku Abdul Rahman Park', coords: LOCATIONS.MANUKAN_ISLAND, type: 'activity', notes: '各玩約 2-2.5 小時，享受陽光沙灘' },
-      { id: '2-5', time: '19:00', activity: '晚餐：肉骨茶 (二選一)', location: 'Swipe to view options', coords: LOCATIONS.YU_KEE_BAK_KUT_TEH, type: 'food', options: [
-           { activity: '佑記肉骨茶 Yu Kee', location: '7, Jalan Gaya', coords: LOCATIONS.YU_KEE_BAK_KUT_TEH, notes: '藥膳味重，碗裝', imageUrl: 'https://images.unsplash.com/photo-1543363363-b8cf4b306b6f?q=80&w=500&auto=format&fit=crop' },
-           { activity: '新記肉骨茶 Sin Kee', location: '26, Jalan Pantai', coords: LOCATIONS.SIN_KEE_BAK_KUT_TEH, notes: '湯頭濃郁，砂鍋裝', imageUrl: 'https://images.unsplash.com/photo-1627916508000-0df9a7978e5f?q=80&w=500&auto=format&fit=crop' }
-      ]},
-      { id: '2-6', time: '20:15', activity: '逛街：加雅街夜市', location: 'Api-Api Night Market', coords: LOCATIONS.API_API_NIGHT_MARKET, type: 'activity', notes: '週五週六限定夜市' }
-    ]
-  },
-  {
-    date: '2026-01-11', weatherTemp: 29, weatherCondition: 'Cloudy',
-    bgImage: 'https://i.pinimg.com/1200x/fd/d5/18/fdd5185cbab77d2e1abf50b54b1fc656.jpg',
-    items: [
-      { id: '3-1', time: '10:45', activity: '網美早午餐 (二選一)', location: 'Swipe to view options', coords: LOCATIONS.WOO_CAFE, type: 'food', options: [
-          { activity: 'Woo! Cafe', location: '25, Lorong Dewan', coords: LOCATIONS.WOO_CAFE, notes: '植物系網美風，義大利麵、早午餐好吃', imageUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=500&auto=format&fit=crop' },
-          { activity: 'Guan\'s Kopitiam', location: 'Jalan Gaya', coords: LOCATIONS.GUANS_KOPITIAM, notes: '有冷氣的復古風，推咖椰吐司、紅咖哩雞', imageUrl: 'https://images.unsplash.com/photo-1559403842-70b925b4be46?q=80&w=500&auto=format&fit=crop' }
-      ]},
-      { id: '3-2', time: '13:30', activity: '長鼻猴 & 螢火蟲之旅', location: 'Kawa Kawa / Weston (Pickup at JQ)', coords: LOCATIONS.JESSELTON_QUAY, type: 'activity', notes: '旅行社專車接送，記得帶防蚊液' },
-      { id: '3-3', time: '21:30', activity: '宵夜 (視體力決定)', location: 'Jesselton Quay / 富源', coords: LOCATIONS.FOOK_YUEN_GAYA, type: 'food' }
-    ]
-  },
-  {
-    date: '2026-01-12', weatherTemp: 32, weatherCondition: 'Sunny',
-    bgImage: 'https://i.pinimg.com/1200x/3d/2b/b9/3d2bb9a9e3ebc71f0b73692f93e19633.jpg',
-    items: [
-      { id: '4-1', time: '11:00', activity: '景點：沙巴大學粉紅清真寺', location: 'Jalan UMS (UMS Pink Mosque)', coords: LOCATIONS.UMS_MOSQUE, type: 'activity', notes: '記得穿著得體或租借長袍，粉紅牆面超好拍' },
-      { id: '4-2', time: '12:30', activity: '午餐：家香生肉麵', location: 'Lintas Plaza', coords: LOCATIONS.JIA_XIANG_LINTAS, type: 'food', notes: '湯頭鮮甜，肉片滑嫩', imageUrl: 'https://images.unsplash.com/photo-1626809804863-7c85172088f1?q=80&w=500&auto=format&fit=crop' },
-      { id: '4-3', time: '14:00', activity: '購物：Imago Shopping Mall', location: 'KK Times Square', coords: LOCATIONS.IMAGO_MALL, type: 'activity', notes: '買 Bata、Padini、超市伴手禮 (3小時)' },
-      { id: '4-4', time: '17:30', activity: '夕陽：丹絨亞路海灘', location: 'Tanjung Aru Beach', coords: LOCATIONS.TANJUNG_ARU_BEACH, type: 'relax', notes: '世界三大夕陽之一，定位 Beach 2 為佳' },
-      { id: '4-5', time: '19:30', activity: '晚餐：大茄來海鮮', location: 'Kompleks Asia City', coords: LOCATIONS.WELCOME_SEAFOOD, type: 'food', notes: '必點：濕奶油老虎蝦、鹹蛋黃炒蟹、桔子冰', imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=500&auto=format&fit=crop' },
-      { id: '4-6', time: '21:30', activity: '按摩：Kama’ A Spa', location: '15, Jalan Dewan', coords: LOCATIONS.KAMA_SPA, type: 'relax', notes: '放鬆完回 JQ 打包行李' }
-    ]
-  },
-  {
-    date: '2026-01-13', weatherTemp: 26, weatherCondition: 'Rain',
-    bgImage: 'https://i.pinimg.com/736x/7e/22/3f/7e223f12849b463bc9ce8caf19b59e53.jpg',
-    flight: {
-      departureTime: '07:40', departureCode: 'BKI', departureAirport: '哥打京那巴魯國際機場｜T1航廈',
-      arrivalTime: '10:55', arrivalCode: 'TPE', arrivalAirport: '台灣桃園國際機場｜T1航廈',
-      airline: '馬來西亞亞洲航空公司 AK1510', flightNumber: 'AK1510', aircraft: '經濟艙 空中巴士 A320-212'
-    },
-    items: [
-      { id: '5-1', time: '04:45', activity: '起床 & 退房', location: 'Jesselton Quay', coords: LOCATIONS.JESSELTON_QUAY, type: 'relax' },
-      { id: '5-2', time: '05:00', activity: '出發前往亞庇機場', location: 'Kota Kinabalu International Airport', coords: LOCATIONS.BKI_AIRPORT, type: 'transport', notes: '叫 Grab，07:00 飛機起飛 ✈️ 回家' }
-    ]
-  }
-];
-
-const SHOPPING_LOCATIONS = [
-  { id: 'sl-1', name: 'Wisma Merdeka', description: '最佳換匯地點，也有賣紀念品', type: '換匯 & 紀念品', googleMapQuery: 'Wisma Merdeka Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1574902998399-56d11bd85721?q=80&w=500' },
-  { id: 'sl-2', name: 'Imago Shopping Mall', description: '亞庇最大商場，必買 Padini, Bata, Fipper, Eureka', type: '購物中心', googleMapQuery: 'Imago Shopping Mall Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1519567241046-7f570eee3d9f?q=80&w=500' },
-  { id: 'sl-3', name: 'Gaya Street Market', description: '週日市集 / 週五六夜市，手工藝品多', type: '當地市集', googleMapQuery: 'Gaya Street Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?q=80&w=500' },
-  { id: 'sl-4', name: 'Suria Sabah', description: '位於海邊的購物中心，有無敵海景，超市好買', type: '購物中心', googleMapQuery: 'Suria Sabah Shopping Mall', imageUrl: 'https://images.unsplash.com/photo-1555529733-0e670560f7e1?q=80&w=500' },
-  { id: 'sl-5', name: 'KK Plaza', description: '地下室超市便宜，適合買伴手禮', type: '超市', googleMapQuery: 'KK Plaza Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1604719312566-b7e6012e6b17?q=80&w=500' }
-];
-
-const SHOPPING_ITEMS = [
-  { id: 'si-1', name: '沙巴紅茶 (Sabah Tea)', description: '神山有機栽種，味道單純不澀。推薦綠色包裝。', rating: 5, imageUrl: 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?q=80&w=500', locationHint: '各大超市' },
-  { id: 'si-2', name: '益和丹南咖啡', description: '沙巴最古老咖啡，必買「銀色包裝 Kopi O」，炭燒味香濃。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1559496417-e7f25cb247f3?q=80&w=500', locationHint: '超市' },
-  { id: 'si-3', name: 'Beryl\'s 巧克力', description: '國寶級巧克力，推薦提拉米蘇和榴槤口味。', rating: 5, imageUrl: 'https://images.unsplash.com/photo-1511381978829-2c287a32d18b?q=80&w=500' },
-  { id: 'si-4', name: 'Eureka 爆米花', description: '馬來西亞產地價約台灣6-7折。口味超多(番茄/酸奶洋蔥)。', rating: 5, locationHint: 'Imago Mall 專櫃', imageUrl: 'https://images.unsplash.com/photo-1578849278619-e73505e9610f?q=80&w=500' },
-  { id: 'si-5', name: 'A1 肉骨茶包', description: '⚠️ 只能買純藥材粉/香料包！含豬肉成分禁帶回台(罰20萬)。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=500' },
-  { id: 'si-6', name: 'Kaya 咖椰醬', description: '如果愛上富源的吐司，買罐頭裝回家抹吐司。', rating: 3, imageUrl: 'https://images.unsplash.com/photo-1589301760588-441b6f5e71a9?q=80&w=500' },
-  { id: 'si-7', name: 'Fipper 夾腳拖', description: '國民拖鞋(大象標誌)。橡膠材質好穿防滑，顏色繽紛。', rating: 5, priceEstimate: 'RM 20-40', locationHint: 'Imago Mall', imageUrl: 'https://images.unsplash.com/photo-1562124638-724e13052aaf?q=80&w=500' },
-  { id: 'si-8', name: 'Padini (Vincci)', description: '國民快時尚。Vincci 鞋包非常便宜好看，涼鞋常不到台幣400。', rating: 4, locationHint: 'Imago Mall', imageUrl: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=500' },
-  { id: 'si-9', name: 'Bata 鞋子', description: '市佔率高，價格比台灣便宜，穿起來很軟很舒服。', rating: 3, locationHint: 'Imago Mall', imageUrl: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=500' },
-  { id: 'si-10', name: '長鼻猴娃娃', description: '婆羅洲特有，鼻子大大醜萌，很有紀念價值。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1570414461014-429a4c58c1df?q=80&w=500' },
-  { id: 'si-11', name: '沙巴手工藝品', description: '編織包、串珠，色彩鮮豔。', rating: 4, locationHint: '加雅街市集', imageUrl: 'https://images.unsplash.com/photo-1459416527563-3467614d9b62?q=80&w=500' },
-  { id: 'si-12', name: 'The Art Attic 文創', description: '當地藝術家設計的明信片、T恤、磁鐵，質感好。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=500' }
-];
-
-const EXCHANGE_RATE = 7.5;
-
-/**
- * APPLICATION LOGIC (Controller)
- */
-const App = {
-    state: {
-        tab: 'plan', // plan, map, wallet, shopping, info
-        itinerary: INITIAL_ITINERARY,
-        selectedDate: '2026-01-09',
-        expenses: [],
-        shopping: {
-            locations: SHOPPING_LOCATIONS,
-            items: SHOPPING_ITEMS,
-            isLocationsExpanded: true
+      const INITIAL_ITINERARY = [
+        {
+          date: '2026-01-09',
+          weatherTemp: 27,
+          weatherCondition: 'Cloudy',
+          bgImage: 'https://i.pinimg.com/736x/a4/ae/3f/a4ae3f8d0c49e9cbf2e725a42e6d24ba.jpg', // D1
+          flight: {
+            departureTime: '19:15',
+            departureCode: 'TPE',
+            departureAirport: '台灣桃園國際機場 ｜T1航廈',
+            arrivalTime: '22:50',
+            arrivalCode: 'BKI',
+            arrivalAirport: '哥打京那巴魯國際機場｜T1航廈',
+            airline: '馬來西亞亞洲航空公司 AK1511',
+            flightNumber: 'AK1511',
+            aircraft: '經濟艙 空中巴士 A320-212'
+          },
+          items: [
+            { id: '1-1', time: '22:30', duration: 40, activity: '抵達亞庇國際機場 (BKI)', location: 'Kota Kinabalu International Airport', coords: LOCATIONS.BKI_AIRPORT, type: 'transport', travelTime: 'Grab 20分' },
+            { id: '1-2', time: '23:30', duration: 20, activity: '抵達住宿 Jesselton Quay (JQ)', location: 'Jesselton Quay, Jalan Tun Fuad Stephens', coords: LOCATIONS.JESSELTON_QUAY, type: 'relax', travelTime: '整理行李' },
+            { id: '1-3', time: '23:50', duration: 60, activity: '宵夜 (二選一)', location: 'Swipe to view options', coords: LOCATIONS.BORENOS_CHICKEN, type: 'food', options: [
+              { activity: 'Borenos Fried Chicken', location: 'Lot G23, Kompleks Asia City', coords: LOCATIONS.BORENOS_CHICKEN, notes: '在地好吃炸雞，開到半夜', imageUrl: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=500&auto=format&fit=crop' },
+              { activity: '富源茶餐廳 Fook Yuen', location: '53, Jalan Gaya', coords: LOCATIONS.FOOK_YUEN_GAYA, notes: '咖椰吐司、拉茶，開到很晚', imageUrl: 'https://images.unsplash.com/photo-1589301760588-441b6f5e71a9?q=80&w=500&auto=format&fit=crop' }
+            ]}
+          ]
         },
-        info: {
-            checklist: [
-                { id: 1, text: "護照 (效期 > 6個月)", checked: false },
-                { id: 2, text: "完成 MDAC 電子入境卡填寫", checked: false },
-                { id: 3, text: "機票電子檔存手機", checked: false },
-                { id: 4, text: "萬用轉接頭 (英規三孔)", checked: false },
-                { id: 5, text: "Grab App 下載並綁卡", checked: false },
-                { id: 6, text: "台幣現金 (約 NT$ 10,000 - 12,000)", checked: false },
-                { id: 7, text: "腸胃藥 / 暈船藥 / 防蚊液", checked: false },
-            ]
+        {
+          date: '2026-01-10',
+          weatherTemp: 31,
+          weatherCondition: 'Sunny',
+          bgImage: 'https://i.pinimg.com/1200x/39/b4/aa/39b4aa96ca7fe7de41f28623af1eaf8b.jpg', // D2
+          items: [
+            { id: '2-0', time: '09:00', duration: 0, activity: '從住宿出發', location: 'Jesselton Quay (JQ)', coords: LOCATIONS.JESSELTON_QUAY, type: 'transport', travelTime: 'Grab 15分' },
+            { id: '2-1', time: '09:15', duration: 45, activity: '早餐：怡豐茶室 Yee Fung Laksa', location: '127, Jalan Gaya', coords: LOCATIONS.YEE_FUNG_LAKSA, type: 'food', notes: '必點：叻沙 Laksa、沙煲雞飯', imageUrl: 'https://images.unsplash.com/photo-1632204655513-3392e2124508?q=80&w=500&auto=format&fit=crop', travelTime: '步行 5分' },
+            { id: '2-2', time: '10:00', duration: 30, activity: '換錢：Wisma Merdeka', location: 'Wisma Merdeka, Jalan Tun Razak', coords: LOCATIONS.WISMA_MERDEKA, type: 'activity', notes: '匯率最好，換完直接走去旁邊碼頭', travelTime: '步行 5分' },
+            { id: '2-3', time: '10:30', duration: 30, activity: '出海：Jesselton Point 碼頭', location: 'Jesselton Point Ferry Terminal', coords: LOCATIONS.JESSELTON_POINT, type: 'transport', notes: '購票：Two Islands - Sapi + Manukan', travelTime: '船程 20分' },
+            { id: '2-4a', time: '11:00', duration: 120, activity: '馬努干島 Manukan Island', location: 'Tunku Abdul Rahman Park', coords: LOCATIONS.MANUKAN_ISLAND, type: 'activity', notes: '享受陽光沙灘', travelTime: '換島船程' },
+            { id: '2-4b', time: '13:00', duration: 120, activity: '沙比島 Sapi Island', location: 'Tunku Abdul Rahman Park', coords: LOCATIONS.SAPI_ISLAND, type: 'activity', notes: '水質較清澈，適合浮潛', travelTime: '船程返回' },
+            { id: '2-5', time: '19:00', duration: 75, activity: '晚餐：肉骨茶 (二選一)', location: 'Swipe to view options', coords: LOCATIONS.YU_KEE_BAK_KUT_TEH, type: 'food', options: [
+               { activity: '佑記肉骨茶 Yu Kee', location: '7, Jalan Gaya', coords: LOCATIONS.YU_KEE_BAK_KUT_TEH, notes: '藥膳味重，碗裝', imageUrl: 'https://images.unsplash.com/photo-1543363363-b8cf4b306b6f?q=80&w=500&auto=format&fit=crop' },
+               { activity: '新記肉骨茶 Sin Kee', location: '26, Jalan Pantai', coords: LOCATIONS.SIN_KEE_BAK_KUT_TEH, notes: '湯頭濃郁，砂鍋裝', imageUrl: 'https://images.unsplash.com/photo-1627916508000-0df9a7978e5f?q=80&w=500&auto=format&fit=crop' }
+            ], travelTime: '步行 3分' },
+            { id: '2-6', time: '20:15', duration: 60, activity: '逛街：加雅街夜市', location: 'Api-Api Night Market', coords: LOCATIONS.API_API_NIGHT_MARKET, type: 'activity', notes: '週五週六限定夜市' }
+          ]
         },
-        wallet: {
-            amount: '',
-            desc: '',
-            cat: 'food',
-            payer: 'JIA',
-            method: 'cash',
-            split: false,
-            filterUser: null
+        {
+          date: '2026-01-11',
+          weatherTemp: 29,
+          weatherCondition: 'Cloudy',
+          bgImage: 'https://i.pinimg.com/1200x/fd/d5/18/fdd5185cbab77d2e1abf50b54b1fc656.jpg', // D3
+          items: [
+            { id: '3-0', time: '10:30', duration: 0, activity: '從住宿出發', location: 'Jesselton Quay (JQ)', coords: LOCATIONS.JESSELTON_QUAY, type: 'transport', travelTime: 'Grab 15分' },
+            { id: '3-1', time: '10:45', duration: 90, activity: '網美早午餐 (二選一)', location: 'Swipe to view options', coords: LOCATIONS.WOO_CAFE, type: 'food', options: [
+              { activity: 'Woo! Cafe', location: '25, Lorong Dewan', coords: LOCATIONS.WOO_CAFE, notes: '植物系網美風，義大利麵、早午餐好吃', imageUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=500&auto=format&fit=crop' },
+              { activity: 'Guan\'s Kopitiam', location: 'Jalan Gaya', coords: LOCATIONS.GUANS_KOPITIAM, notes: '有冷氣的復古風，推咖椰吐司、紅咖哩雞', imageUrl: 'https://images.unsplash.com/photo-1559403842-70b925b4be46?q=80&w=500&auto=format&fit=crop' }
+            ], travelTime: '車程 90分' },
+            { id: '3-2', time: '13:30', duration: 360, activity: '長鼻猴 & 螢火蟲之旅', location: 'Kawa Kawa / Weston (Pickup at JQ)', coords: LOCATIONS.JESSELTON_QUAY, type: 'activity', notes: '旅行社專車接送，記得帶防蚊液', travelTime: '車程 90分' },
+            { id: '3-3', time: '21:30', duration: 60, activity: '宵夜 (視體力決定)', location: 'Jesselton Quay / 富源', coords: LOCATIONS.FOOK_YUEN_GAYA, type: 'food' }
+          ]
         },
-        editingNote: { itemId: null, optionIdx: null, value: '' }
-    },
+        {
+          date: '2026-01-12',
+          weatherTemp: 32,
+          weatherCondition: 'Sunny',
+          bgImage: 'https://i.pinimg.com/1200x/3d/2b/b9/3d2bb9a9e3ebc71f0b73692f93e19633.jpg', // D4
+          items: [
+            { id: '4-0', time: '10:40', duration: 0, activity: '從住宿出發', location: 'Jesselton Quay (JQ)', coords: LOCATIONS.JESSELTON_QUAY, type: 'transport', travelTime: 'Grab 20分' },
+            { id: '4-1', time: '11:00', duration: 60, activity: '景點：沙巴大學粉紅清真寺', location: 'Jalan UMS (UMS Pink Mosque)', coords: LOCATIONS.UMS_MOSQUE, type: 'activity', notes: '記得穿著得體或租借長袍，粉紅牆面超好拍', travelTime: 'Grab 20分' },
+            { id: '4-2', time: '12:30', duration: 60, activity: '午餐：家香生肉麵', location: 'Lintas Plaza', coords: LOCATIONS.JIA_XIANG_LINTAS, type: 'food', notes: '湯頭鮮甜，肉片滑嫩', imageUrl: 'https://images.unsplash.com/photo-1626809804863-7c85172088f1?q=80&w=500&auto=format&fit=crop', travelTime: 'Grab 15分' },
+            { id: '4-3', time: '14:00', duration: 180, activity: '購物：Imago Shopping Mall', location: 'KK Times Square', coords: LOCATIONS.IMAGO_MALL, type: 'activity', notes: '買 Bata、Padini、超市伴手禮 (3小時)', travelTime: 'Grab 15分' },
+            { id: '4-4', time: '17:30', duration: 90, activity: '夕陽：丹絨亞路海灘', location: 'Tanjung Aru Beach', coords: LOCATIONS.TANJUNG_ARU_BEACH, type: 'relax', notes: '世界三大夕陽之一，定位 Beach 2 為佳', travelTime: 'Grab 15分' },
+            { id: '4-5', time: '19:30', duration: 90, activity: '晚餐：大茄來海鮮', location: 'Kompleks Asia City', coords: LOCATIONS.WELCOME_SEAFOOD, type: 'food', notes: '必點：濕奶油老虎蝦、鹹蛋黃炒蟹、桔子冰', imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=500&auto=format&fit=crop', travelTime: '步行 5分' },
+            { id: '4-6', time: '21:30', duration: 30, activity: '按摩：Kama’ A Spa', location: '15, Jalan Dewan', coords: LOCATIONS.KAMA_SPA, type: 'relax', notes: '放鬆完回 JQ 打包行李' }
+          ]
+        },
+        {
+          date: '2026-01-13',
+          weatherTemp: 26,
+          weatherCondition: 'Rain',
+          bgImage: 'https://i.pinimg.com/736x/7e/22/3f/7e223f12849b463bc9ce8caf19b59e53.jpg', // D5
+          flight: {
+            departureTime: '07:40',
+            departureCode: 'BKI',
+            departureAirport: '哥打京那巴魯國際機場｜T1航廈',
+            arrivalTime: '10:55',
+            arrivalCode: 'TPE',
+            arrivalAirport: '台灣桃園國際機場｜T1航廈',
+            airline: '馬來西亞亞洲航空公司 AK1510',
+            flightNumber: 'AK1510',
+            aircraft: '經濟艙 空中巴士 A320-212'
+          },
+          items: [
+            { id: '5-1', time: '04:45', duration: 15, activity: '起床 & 退房', location: 'Jesselton Quay', coords: LOCATIONS.JESSELTON_QUAY, type: 'relax', travelTime: 'Grab 20分' },
+            { id: '5-2', time: '05:00', duration: 0, activity: '出發前往亞庇機場', location: 'Kota Kinabalu International Airport', coords: LOCATIONS.BKI_AIRPORT, type: 'transport', notes: '叫 Grab，07:00 飛機起飛 ✈️ 回家' }
+          ]
+        }
+      ];
 
-    mapInstance: null,
+      const INITIAL_EXPENSES = [];
 
-    init: function() {
-        this.render();
-        // Load Lucide Icons
-        lucide.createIcons();
-    },
+      const INITIAL_SHOPPING_LOCATIONS = [
+        { id: 'sl-1', name: 'Wisma Merdeka', description: '最佳換匯地點，也有賣紀念品', type: '換匯 & 紀念品', googleMapQuery: 'Wisma Merdeka Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1574902998399-56d11bd85721?q=80&w=500' },
+        { id: 'sl-2', name: 'Imago Shopping Mall', description: '亞庇最大商場，必買 Padini, Bata, Fipper, Eureka', type: '購物中心', googleMapQuery: 'Imago Shopping Mall Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1519567241046-7f570eee3d9f?q=80&w=500' },
+        { id: 'sl-3', name: 'Gaya Street Market', description: '週日市集 / 週五六夜市，手工藝品多', type: '當地市集', googleMapQuery: 'Gaya Street Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?q=80&w=500' },
+        { id: 'sl-4', name: 'Suria Sabah', description: '位於海邊的購物中心，有無敵海景，超市好買', type: '購物中心', googleMapQuery: 'Suria Sabah Shopping Mall', imageUrl: 'https://images.unsplash.com/photo-1555529733-0e670560f7e1?q=80&w=500' },
+        { id: 'sl-5', name: 'KK Plaza', description: '地下室超市便宜，適合買伴手禮', type: '超市', googleMapQuery: 'KK Plaza Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1604719312566-b7e6012e6b17?q=80&w=500' }
+      ];
 
-    setTab: function(tab) {
-        this.state.tab = tab;
-        this.render();
-    },
+      const INITIAL_SHOPPING_ITEMS = [
+        { id: 'si-1', name: '沙巴紅茶 (Sabah Tea)', description: '神山有機栽種，味道單純不澀。推薦綠色包裝。', rating: 5, imageUrl: 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?q=80&w=500', locationHint: '各大超市' },
+        { id: 'si-2', name: '益和丹南咖啡', description: '沙巴最古老咖啡，必買「銀色包裝 Kopi O」，炭燒味香濃。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1559496417-e7f25cb247f3?q=80&w=500', locationHint: '超市' },
+        { id: 'si-3', name: 'Beryl\'s 巧克力', description: '國寶級巧克力，推薦提拉米蘇和榴槤口味。', rating: 5, imageUrl: 'https://images.unsplash.com/photo-1511381978829-2c287a32d18b?q=80&w=500' },
+        { id: 'si-4', name: 'Eureka 爆米花', description: '馬來西亞產地價約台灣6-7折。口味超多(番茄/酸奶洋蔥)。', rating: 5, locationHint: 'Imago Mall 專櫃', imageUrl: 'https://images.unsplash.com/photo-1578849278619-e73505e9610f?q=80&w=500' },
+        { id: 'si-5', name: 'A1 肉骨茶包', description: '⚠️ 只能買純藥材粉/香料包！含豬肉成分禁帶回台(罰20萬)。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=500' },
+        { id: 'si-6', name: 'Kaya 咖椰醬', description: '如果愛上富源的吐司，買罐頭裝回家抹吐司。', rating: 3, imageUrl: 'https://images.unsplash.com/photo-1589301760588-441b6f5e71a9?q=80&w=500' },
+        { id: 'si-7', name: 'Fipper 夾腳拖', description: '國民拖鞋(大象標誌)。橡膠材質好穿防滑，顏色繽紛。', rating: 5, priceEstimate: 'RM 20-40', locationHint: 'Imago Mall', imageUrl: 'https://images.unsplash.com/photo-1562124638-724e13052aaf?q=80&w=500' },
+        { id: 'si-8', name: 'Padini (Vincci)', description: '國民快時尚。Vincci 鞋包非常便宜好看，涼鞋常不到台幣400。', rating: 4, locationHint: 'Imago Mall', imageUrl: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=500' },
+        { id: 'si-9', name: 'Bata 鞋子', description: '市佔率高，價格比台灣便宜，穿起來很軟很舒服。', rating: 3, locationHint: 'Imago Mall', imageUrl: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=500' },
+        { id: 'si-10', name: '長鼻猴娃娃', description: '婆羅洲特有，鼻子大大醜萌，很有紀念價值。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1570414461014-429a4c58c1df?q=80&w=500' },
+        { id: 'si-11', name: '沙巴手工藝品', description: '編織包、串珠，色彩鮮豔。', rating: 4, locationHint: '加雅街市集', imageUrl: 'https://images.unsplash.com/photo-1459416527563-3467614d9b62?q=80&w=500' },
+        { id: 'si-12', name: 'The Art Attic 文創', description: '當地藝術家設計的明信片、T恤、磁鐵，質感好。', rating: 4, imageUrl: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=500' }
+      ];
 
-    setDate: function(date) {
-        this.state.selectedDate = date;
-        this.render();
-    },
+      // ----------------------------------------------------------------------
+      // Components
+      // ----------------------------------------------------------------------
 
-    dismissSplash: function() {
-        document.getElementById('splash-screen').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('splash-screen').style.display = 'none';
-        }, 500);
-    },
+      // --- EditableImage ---
+      const EditableImage = ({ src, alt, className = "", onImageChange, placeholderIcon }) => {
+        const fileInputRef = useRef(null);
+        const pressTimer = useRef(null);
+        const [isPressing, setIsPressing] = useState(false);
 
-    // --- Actions ---
-    
-    // Itinerary Note Actions
-    openNoteModal: function(itemId, optionIdx = null, currentNote = '') {
-        this.state.editingNote = { itemId, optionIdx, value: currentNote || '' };
-        const modal = document.getElementById('note-modal');
-        document.getElementById('note-input').value = currentNote || '';
-        modal.classList.remove('hidden');
-    },
-
-    closeNoteModal: function() {
-        document.getElementById('note-modal').classList.add('hidden');
-    },
-
-    saveNote: function() {
-        const { itemId, optionIdx } = this.state.editingNote;
-        const noteValue = document.getElementById('note-input').value;
-        
-        // Update state
-        this.state.itinerary = this.state.itinerary.map(day => {
-            const hasItem = day.items.find(i => i.id === itemId);
-            if (!hasItem) return day;
-            
-            const newItems = day.items.map(item => {
-                if (item.id === itemId) {
-                    if (optionIdx !== null && item.options) {
-                        const newOptions = [...item.options];
-                        newOptions[optionIdx] = { ...newOptions[optionIdx], notes: noteValue };
-                        return { ...item, options: newOptions };
-                    }
-                    return { ...item, notes: noteValue };
-                }
-                return item;
-            });
-            return { ...day, items: newItems };
-        });
-
-        this.closeNoteModal();
-        this.render();
-    },
-
-    // Shopping Actions
-    toggleShoppingLocations: function() {
-        this.state.shopping.isLocationsExpanded = !this.state.shopping.isLocationsExpanded;
-        this.render();
-    },
-    
-    openShoppingItemModal: function(itemId) {
-        const item = this.state.shopping.items.find(i => i.id === itemId);
-        if (!item) return;
-        
-        const html = `
-            <div class="flex flex-col h-full max-h-[80vh]">
-                 <button onclick="App.closeModal()" class="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 z-20">
-                    <i data-lucide="x" width="20"></i>
-                </button>
-                <div class="aspect-[4/3] rounded-2xl bg-gray-100 overflow-hidden mb-5 relative shrink-0">
-                     <img src="${item.imageUrl}" class="w-full h-full object-cover">
-                </div>
-                <h2 class="text-2xl font-serif font-bold text-sabah-dark leading-tight mb-2">${item.name}</h2>
-                <div class="text-sm font-bold text-sabah-blue bg-blue-50 px-3 py-1.5 rounded-lg self-start mb-4">
-                     ${item.priceEstimate ? '參考價格：' + item.priceEstimate : '必買推薦'}
-                </div>
-                <div class="space-y-4 overflow-y-auto">
-                    <div>
-                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">特色介紹</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">${item.description}</p>
-                    </div>
-                    ${item.locationHint ? `
-                    <div>
-                         <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">哪裡買</h4>
-                         <div class="flex items-center gap-2 text-sm text-sabah-dark font-medium">
-                            <i data-lucide="map-pin" width="16" class="text-sabah-orange"></i>
-                            ${item.locationHint}
-                         </div>
-                    </div>` : ''}
-                </div>
-            </div>
-        `;
-        this.showModal(html);
-    },
-
-    // Wallet Actions
-    addExpense: function(e) {
-        e.preventDefault(); // handled by onclick
-        // Get values from form inputs by ID since we aren't using React state binding for form
-        const amount = document.getElementById('ex-amount').value;
-        const desc = document.getElementById('ex-desc').value;
-        
-        if (!amount || !desc) return;
-
-        const expense = {
-            id: Date.now().toString(),
-            amountMYR: parseFloat(amount),
-            amountTWD: parseFloat(amount) * EXCHANGE_RATE,
-            category: this.state.wallet.cat,
-            description: desc,
-            date: new Date().toISOString().split('T')[0],
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
-            payer: this.state.wallet.payer,
-            paymentMethod: this.state.wallet.method,
-            isSplit: this.state.wallet.split
+        const handleStart = () => {
+          setIsPressing(true);
+          pressTimer.current = setTimeout(() => {
+            fileInputRef.current?.click();
+            setIsPressing(false);
+            if (navigator.vibrate) navigator.vibrate(50);
+          }, 800);
         };
 
-        this.state.expenses.push(expense);
-        
-        // Reset form inputs only
-        this.state.wallet.amount = '';
-        this.state.wallet.desc = '';
-        this.state.wallet.split = false;
-        
-        this.render();
-    },
+        const handleEnd = () => {
+          setIsPressing(false);
+          if (pressTimer.current) clearTimeout(pressTimer.current);
+        };
 
-    setWalletState: function(key, val) {
-        this.state.wallet[key] = val;
-        this.render();
-    },
+        const handleFileChange = (e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              if (typeof reader.result === 'string') onImageChange(reader.result);
+            };
+            reader.readAsDataURL(file);
+          }
+        };
 
-    deleteExpense: function(id) {
-        if(confirm('確認刪除此筆紀錄？')) {
-            this.state.expenses = this.state.expenses.filter(e => e.id !== id);
-            this.render();
-        }
-    },
-
-    // Info Actions
-    toggleChecklist: function(id) {
-        this.state.info.checklist = this.state.info.checklist.map(i => 
-            i.id === id ? { ...i, checked: !i.checked } : i
+        return (
+          <>
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+            <div 
+              className={`relative overflow-hidden cursor-pointer select-none ${className}`}
+              onTouchStart={handleStart} onTouchEnd={handleEnd} onMouseDown={handleStart} onMouseUp={handleEnd} onMouseLeave={handleEnd}
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300 ${isPressing ? 'opacity-100' : 'opacity-0'} pointer-events-none`}>
+                <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-bold border border-white/30">更換圖片</div>
+              </div>
+              {src ? (
+                <img src={src} alt={alt} className="w-full h-full object-cover pointer-events-none" onError={(e) => e.currentTarget.style.display = 'none'} />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-100">
+                  {placeholderIcon || <ImageIcon size={24} />}
+                </div>
+              )}
+            </div>
+          </>
         );
-        this.render();
-    },
-    
-    addChecklistItem: function() {
-        const val = document.getElementById('new-check-item').value;
-        if (!val) return;
-        this.state.info.checklist.push({ id: Date.now(), text: val, checked: false });
-        this.render();
-    },
+      };
 
-    deleteChecklistItem: function(id) {
-        this.state.info.checklist = this.state.info.checklist.filter(i => i.id !== id);
-        this.render();
-    },
+      // --- DateSelector ---
+      const DateSelector = ({ days, selectedDate, onSelectDate }) => {
+        return (
+          <div className="w-full bg-transparent">
+            <div className="flex overflow-x-auto gap-2 px-1 pb-1 no-scrollbar snap-x">
+              {days.map((day) => {
+                const isSelected = day.date === selectedDate;
+                const [year, month, d] = day.date.split('-').map(Number);
+                const dateObj = new Date(year, month - 1, d);
+                const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dateObj.getDay()];
+                return (
+                  <button
+                    key={day.date}
+                    onClick={() => onSelectDate(day.date)}
+                    className={`flex-shrink-0 flex flex-col items-center justify-center w-[42px] h-[54px] rounded-[14px] transition-all duration-300 snap-center border-[1.5px]
+                    ${isSelected ? 'bg-sabah-blue border-sabah-blue text-white shadow-md shadow-blue-500/30 scale-105' : 'bg-white/80 border-transparent text-gray-500 hover:bg-white hover:border-gray-100 backdrop-blur-sm'}`}
+                  >
+                    <span className={`text-[8px] font-sans font-bold uppercase tracking-wider ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>{weekday}</span>
+                    <span className={`text-lg font-serif font-bold -mt-0.5 ${isSelected ? 'text-white' : 'text-sabah-dark'}`}>{dateObj.getDate()}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      };
 
-    // Modal Utils
-    showModal: function(contentHtml) {
-        const container = document.getElementById('modal-container');
-        const content = document.getElementById('modal-content');
-        content.innerHTML = contentHtml;
-        container.classList.remove('hidden');
-        // Simple animation
-        setTimeout(() => {
-            content.classList.remove('scale-95', 'opacity-0');
-            content.classList.add('scale-100', 'opacity-100');
-        }, 10);
-        lucide.createIcons();
-    },
+      // --- ItineraryList ---
+      const ItineraryList = ({ dayPlan, onUpdate }) => {
+        const [editingId, setEditingId] = useState(null);
+        const dragItem = useRef(null);
+        const dragOverItem = useRef(null);
+        const timerRef = useRef(null);
+        const [pressProgress, setPressProgress] = useState(0);
+        const progressIntervalRef = useRef(null);
 
-    closeModal: function() {
-        const container = document.getElementById('modal-container');
-        const content = document.getElementById('modal-content');
-        content.classList.remove('scale-100', 'opacity-100');
-        content.classList.add('scale-95', 'opacity-0');
-        setTimeout(() => {
-            container.classList.add('hidden');
-        }, 300);
-    },
-
-    // --- RENDERERS ---
-
-    render: function() {
-        const { tab, selectedDate, itinerary } = this.state;
-        const currentDay = itinerary.find(d => d.date === selectedDate);
-
-        // 1. Update Background
-        const bgLayer = document.getElementById('bg-layer');
-        if (tab === 'plan') {
-            bgLayer.innerHTML = `<img src="${currentDay.bgImage}" class="w-full h-full object-cover transition-opacity duration-500 opacity-100">`;
-        } else {
-            bgLayer.innerHTML = `<div class="w-full h-full bg-sabah-bg transition-opacity duration-500"></div>`;
-        }
-
-        // 2. Update Header
-        const header = document.getElementById('header-container');
-        header.innerHTML = this.renderHeader();
-
-        // 3. Update Main Content
-        const main = document.getElementById('main-content');
-        // Clear previous content? Ideally diff, but full replace for vanilla simplicity
-        main.innerHTML = this.renderMainContent();
-
-        // 4. Update Nav
-        const nav = document.getElementById('nav-container');
-        nav.innerHTML = this.renderNav();
-
-        // Post-render effects
-        if (tab === 'map') {
-            this.initMap();
-        }
-        lucide.createIcons();
-    },
-
-    renderHeader: function() {
-        const { tab, selectedDate, itinerary } = this.state;
-        
-        if (tab === 'plan') {
-             const currentDay = itinerary.find(d => d.date === selectedDate);
-             const getWeatherLabel = (cond) => {
-                 if(cond.includes('Rain')) return '雨天';
-                 if(cond.includes('Cloud')) return '多雲';
-                 return '晴朗';
-             };
-             
-             return `
-                <div class="px-6 pt-safe pb-4 bg-white/30 backdrop-blur-md sticky top-0 z-30 shadow-sm border-b border-white/20 transition-all">
-                    <h1 class="text-2xl font-serif font-black text-sabah-dark tracking-wide mb-4 mt-3 drop-shadow-sm">Sabah | 亞庇海中遊</h1>
-                    <div class="flex items-end justify-between gap-4">
-                        <!-- Date Selector -->
-                        <div class="flex-1 overflow-x-auto no-scrollbar flex gap-2 snap-x">
-                            ${itinerary.map(day => {
-                                const isSelected = day.date === selectedDate;
-                                const dateObj = new Date(day.date);
-                                const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dateObj.getDay()];
-                                return `
-                                <button onclick="App.setDate('${day.date}')" 
-                                    class="flex-shrink-0 w-[42px] h-[54px] rounded-[14px] flex flex-col items-center justify-center border-[1.5px] transition-all snap-center
-                                    ${isSelected ? 'bg-sabah-blue border-sabah-blue text-white shadow-md scale-105' : 'bg-white/80 border-transparent text-gray-500'}">
-                                    <span class="text-[8px] font-bold uppercase ${isSelected ? 'text-white/80' : 'text-gray-400'}">${dayName}</span>
-                                    <span class="text-lg font-serif font-bold leading-none ${isSelected ? 'text-white' : 'text-sabah-dark'}">${dateObj.getDate()}</span>
-                                </button>
-                                `;
-                            }).join('')}
-                        </div>
-                        
-                        <!-- Weather/Info -->
-                        <div class="flex flex-col items-end gap-1 mb-1">
-                             <div class="text-[10px] font-bold tracking-[0.2em] text-sabah-dark/70 bg-white/50 px-2 py-0.5 rounded-full backdrop-blur-sm">MALAYSIA</div>
-                             <div class="flex items-center gap-1.5 bg-white/80 px-2 py-1 rounded-lg backdrop-blur-sm shadow-sm">
-                                <i data-lucide="${currentDay.weatherCondition.includes('Rain') ? 'cloud-rain' : currentDay.weatherCondition.includes('Cloud') ? 'cloud' : 'sun'}" 
-                                   width="14" class="${currentDay.weatherCondition.includes('Sunny') ? 'text-sabah-yellow' : 'text-gray-500'}"></i>
-                                <span class="text-xs font-bold text-sabah-dark">${currentDay.weatherTemp}°</span>
-                                <span class="text-[10px] text-gray-500 font-medium">${getWeatherLabel(currentDay.weatherCondition)}</span>
-                             </div>
-                        </div>
-                    </div>
-                </div>
-             `;
-        }
-        return ''; // No header for other tabs or handled inside content
-    },
-
-    renderMainContent: function() {
-        const { tab } = this.state;
-        if (tab === 'plan') return this.renderItinerary();
-        if (tab === 'map') return '<div id="map-container" class="w-full h-full z-0"></div>';
-        if (tab === 'wallet') return this.renderWallet();
-        if (tab === 'shopping') return this.renderShopping();
-        if (tab === 'info') return this.renderInfo();
-        return '';
-    },
-
-    renderNav: function() {
-        const tabs = [
-            { id: 'plan', label: '行程', icon: 'calendar' },
-            { id: 'map', label: '地圖', icon: 'map' },
-            { id: 'wallet', label: '記帳', icon: 'wallet' },
-            { id: 'shopping', label: '購物', icon: 'shopping-bag' },
-            { id: 'info', label: '資訊', icon: 'info' }
-        ];
-
-        return tabs.map(t => {
-            const isActive = this.state.tab === t.id;
-            return `
-                <button onclick="App.setTab('${t.id}')" class="flex flex-col items-center justify-center w-14 transition-all duration-300 gap-1 ${isActive ? 'text-sabah-dark scale-110' : 'text-gray-400'}">
-                    <i data-lucide="${t.icon}" width="${isActive ? 24 : 20}" stroke-width="${isActive ? 2.5 : 2}"></i>
-                    <span class="text-[9px] font-bold ${isActive ? 'opacity-100' : 'opacity-80'}">${t.label}</span>
-                </button>
-            `;
-        }).join('');
-    },
-
-    // --- Sub-Renderers ---
-
-    renderItinerary: function() {
-        const day = this.state.itinerary.find(d => d.date === this.state.selectedDate);
-        
-        let flightHtml = '';
-        if (day.flight) {
-            flightHtml = `
-            <div class="bg-white/90 backdrop-blur-md rounded-[24px] p-5 shadow-card mb-8 border border-white/50 relative overflow-hidden">
-                <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 to-red-600"></div>
-                <div class="flex justify-between items-center mb-6 mt-1">
-                    <div class="flex flex-col">
-                        <span class="text-4xl font-sans font-bold text-sabah-dark">${day.flight.departureCode}</span>
-                        <span class="text-2xl font-serif text-sabah-blue font-bold">${day.flight.departureTime}</span>
-                    </div>
-                    <div class="flex flex-col items-center flex-1 px-4 text-gray-300">
-                         <i data-lucide="plane" class="transform -rotate-45 mb-2" width="32"></i>
-                         <div class="w-full h-[1px] bg-gray-300 border-t border-dashed border-gray-400"></div>
-                         <span class="text-[10px] text-gray-400 font-bold mt-1">直飛</span>
-                    </div>
-                    <div class="flex flex-col items-end">
-                         <span class="text-4xl font-sans font-bold text-sabah-dark">${day.flight.arrivalCode}</span>
-                         <span class="text-2xl font-serif text-sabah-blue font-bold">${day.flight.arrivalTime}</span>
-                    </div>
-                </div>
-                <div class="flex justify-between items-start text-xs text-gray-500 font-sans mb-4 gap-4">
-                     <div class="flex-1 text-left leading-tight">
-                        <span class="block font-bold text-sabah-dark">${day.flight.departureAirport.split('｜')[0]}</span>
-                        <span class="block text-[10px] text-gray-400 mt-0.5">${day.flight.departureAirport.split('｜')[1] || ''}</span>
-                     </div>
-                     <div class="flex-1 text-right leading-tight">
-                        <span class="block font-bold text-sabah-dark">${day.flight.arrivalAirport.split('｜')[0]}</span>
-                        <span class="block text-[10px] text-gray-400 mt-0.5">${day.flight.arrivalAirport.split('｜')[1] || ''}</span>
-                     </div>
-                </div>
-                <div class="bg-gray-50/80 rounded-xl p-3 flex items-center gap-3 border border-gray-100">
-                    <div class="w-6 h-6 flex-shrink-0"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/AirAsia_New_Logo.svg/1024px-AirAsia_New_Logo.svg.png" class="w-full h-full object-contain"></div>
-                    <div class="flex flex-col">
-                         <span class="text-xs font-bold text-sabah-dark">${day.flight.airline}</span>
-                         <span class="text-[10px] text-gray-400">${day.flight.aircraft}</span>
-                    </div>
-                </div>
-            </div>`;
-        }
-
-        const itemsHtml = day.items.map(item => {
-            const timeParts = item.time.split(':');
-            const typeColor = item.type === 'food' ? 'bg-sabah-orange' : item.type === 'relax' ? 'bg-sabah-green' : item.type === 'transport' ? 'bg-sabah-yellow' : 'bg-sabah-blue';
-            
-            let cardContent = '';
-            
-            if (item.options) {
-                // Multi option
-                const optionsHtml = item.options.map((opt, idx) => `
-                    <div class="min-w-[85%] snap-center bg-white/85 backdrop-blur-md rounded-[24px] p-4 shadow-card border border-white/40 flex flex-col gap-3">
-                        <div class="flex gap-3">
-                            <div class="flex-1">
-                                <h3 class="text-base font-serif font-bold text-sabah-dark mb-2 leading-tight line-clamp-2">${opt.activity}</h3>
-                                <a href="https://www.google.com/maps/search/?api=1&query=${opt.coords.lat},${opt.coords.lng}" target="_blank" class="flex items-start gap-1.5 text-gray-500 text-xs hover:text-sabah-blue transition-colors">
-                                    <i data-lucide="map-pin" width="12" class="mt-0.5 text-sabah-blue"></i>
-                                    <span>${opt.location}</span>
-                                </a>
-                            </div>
-                            ${opt.imageUrl ? `<div class="w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100"><img src="${opt.imageUrl}" class="w-full h-full object-cover"></div>` : ''}
-                        </div>
-                        <div class="bg-white/50 p-3 rounded-xl border border-gray-100/50 relative group min-h-[40px]">
-                            <p class="text-xs text-gray-500 font-serif font-medium leading-relaxed pr-6">${opt.notes ? '💡 '+opt.notes : ''}</p>
-                            <button onclick="App.openNoteModal('${item.id}', ${idx}, '${opt.notes || ''}')" class="absolute top-2 right-2 p-1 text-gray-300 hover:text-sabah-blue"><i data-lucide="pencil" width="12"></i></button>
-                        </div>
-                    </div>
-                `).join('');
-                
-                cardContent = `
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-2 px-2">
-                             <span className="text-[10px] bg-white/50 text-sabah-orange border border-sabah-orange/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">二選一</span>
-                             <div class="flex-1 h-[1px] bg-white/30"></div>
-                             <span class="text-[10px] text-white font-medium flex items-center gap-1 opacity-80">向右滑動 <i data-lucide="arrow-right" width="10"></i></span>
-                        </div>
-                        <div class="flex overflow-x-auto gap-4 pb-4 -mx-2 px-2 snap-x no-scrollbar">
-                            ${optionsHtml}
-                        </div>
-                    </div>
-                `;
-            } else {
-                // Single Item
-                cardContent = `
-                    <div class="flex-1 bg-white/85 backdrop-blur-md rounded-[24px] p-5 shadow-card hover:shadow-soft transition-all duration-300 border border-white/40 flex flex-col gap-3">
-                        <div class="flex gap-4">
-                            <div class="flex-1">
-                                <div class="flex justify-between items-start mb-2">
-                                    <div class="flex items-center gap-1.5 text-gray-400 text-[10px] font-bold uppercase tracking-wider">
-                                        <i data-lucide="clock" width="10"></i>
-                                        ${item.type === 'food' ? '餐飲' : item.type === 'transport' ? '交通' : item.type === 'activity' ? '行程' : '休息'}
-                                    </div>
-                                </div>
-                                <h3 class="text-lg font-serif font-bold text-sabah-dark mb-2 leading-tight">${item.activity}</h3>
-                                <a href="https://www.google.com/maps/search/?api=1&query=${item.coords.lat},${item.coords.lng}" target="_blank" class="flex items-start gap-1.5 text-gray-500 text-xs hover:text-sabah-blue transition-colors mb-1">
-                                    <i data-lucide="map-pin" width="12" class="mt-0.5 text-sabah-blue"></i>
-                                    <span>${item.location}</span>
-                                </a>
-                            </div>
-                            ${item.imageUrl ? `<div class="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden shadow-sm border border-white"><img src="${item.imageUrl}" class="w-full h-full object-cover"></div>` : ''}
-                        </div>
-                        <div class="bg-white/50 p-3 rounded-xl border border-gray-100/50 relative group min-h-[40px]">
-                            <p class="text-xs text-gray-500 font-serif font-medium leading-relaxed pr-6">${item.notes ? '💡 '+item.notes : '<span class="text-gray-300 italic">點擊編輯備註...</span>'}</p>
-                            <button onclick="App.openNoteModal('${item.id}', null, '${item.notes || ''}')" class="absolute top-2 right-2 p-1 text-gray-300 hover:text-sabah-blue"><i data-lucide="pencil" width="12"></i></button>
-                        </div>
-                    </div>
-                `;
+        const handleSaveNote = (itemId, newNote, optionIndex) => {
+          const updatedItems = dayPlan.items.map(item => {
+            if (item.id === itemId) {
+              if (optionIndex !== undefined && item.options) {
+                const newOptions = [...item.options];
+                newOptions[optionIndex] = { ...newOptions[optionIndex], notes: newNote };
+                return { ...item, options: newOptions };
+              }
+              return { ...item, notes: newNote };
             }
+            return item;
+          });
+          onUpdate({ ...dayPlan, items: updatedItems });
+        };
 
-            return `
-                <div class="flex gap-4 group">
-                    <div class="flex flex-col items-center pt-1">
-                        <div class="w-12 h-12 rounded-[18px] ${typeColor} text-white flex flex-col items-center justify-center shadow-sm z-10">
-                            <span class="text-[10px] opacity-80 font-medium leading-none mb-0.5">${timeParts[0]}</span>
-                            <span class="text-xs font-bold leading-none">${timeParts[1]}</span>
-                        </div>
-                    </div>
-                    ${cardContent}
-                </div>
-            `;
-        }).join('');
+        const handleSaveImage = (itemId, newImage, optionIndex) => {
+          const updatedItems = dayPlan.items.map(item => {
+            if (item.id === itemId) {
+              if (optionIndex !== undefined && item.options) {
+                const newOptions = [...item.options];
+                newOptions[optionIndex] = { ...newOptions[optionIndex], imageUrl: newImage };
+                return { ...item, options: newOptions };
+              }
+              return { ...item, imageUrl: newImage };
+            }
+            return item;
+          });
+          onUpdate({ ...dayPlan, items: updatedItems });
+        };
 
-        return `
-            <div class="pb-24 pt-4 px-6 relative z-10 animate-fade-in">
-                ${flightHtml}
-                <div class="space-y-5 relative">
-                    <div class="absolute left-[23px] top-6 bottom-6 w-[2px] bg-gray-300/50 -z-10 mix-blend-overlay"></div>
-                    ${itemsHtml}
+        const handleDragStart = (e, index) => {
+          dragItem.current = index;
+          setEditingId(null);
+        };
+        const handleDragEnter = (e, index) => dragOverItem.current = index;
+        const handleDragEnd = () => {
+          if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
+            const _items = [...dayPlan.items];
+            const dragged = _items.splice(dragItem.current, 1)[0];
+            _items.splice(dragOverItem.current, 0, dragged);
+            // Re-calc logic omitted for brevity, keeping simple reorder
+            onUpdate({ ...dayPlan, items: _items });
+          }
+          dragItem.current = null;
+          dragOverItem.current = null;
+        };
+
+        const startLongPress = (id) => {
+          if (editingId === id) return;
+          setPressProgress(0);
+          progressIntervalRef.current = setInterval(() => setPressProgress(o => Math.min(o + 2.5, 100)), 50);
+          timerRef.current = setTimeout(() => {
+            if (navigator.vibrate) navigator.vibrate(50);
+            setEditingId(id);
+            setPressProgress(0);
+            clearInterval(progressIntervalRef.current);
+          }, 2000);
+        };
+        const cancelLongPress = () => {
+          clearTimeout(timerRef.current);
+          clearInterval(progressIntervalRef.current);
+          setPressProgress(0);
+        };
+
+        return (
+          <div className="pb-24 animate-fade-in relative z-10 pt-4 px-6">
+            {dayPlan.flight && (
+              <div className="bg-white/90 backdrop-blur-md rounded-[24px] p-5 shadow-card mb-8 border border-white/50 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 to-red-600"></div>
+                <div className="flex justify-between items-center mb-6 mt-1">
+                  <div className="flex flex-col"><span className="text-4xl font-sans font-bold text-sabah-dark">{dayPlan.flight.departureCode}</span><span className="text-2xl font-serif text-sabah-blue font-bold">{dayPlan.flight.departureTime}</span></div>
+                  <div className="flex flex-col items-center flex-1 px-4 text-gray-300"><Plane size={32} className="transform -rotate-45" /><div className="w-full h-[1px] bg-gray-300 border-t border-dashed border-gray-400 mt-2"></div><span className="text-[10px] text-gray-400 font-bold mt-1">直飛</span></div>
+                  <div className="flex flex-col items-end"><span className="text-4xl font-sans font-bold text-sabah-dark">{dayPlan.flight.arrivalCode}</span><span className="text-2xl font-serif text-sabah-blue font-bold">{dayPlan.flight.arrivalTime}</span></div>
                 </div>
+                <div className="bg-gray-50/80 rounded-xl p-3 flex items-center gap-3 border border-gray-100"><div className="flex flex-col"><span className="text-xs font-bold text-sabah-dark">{dayPlan.flight.airline}</span><span className="text-[10px] text-gray-400">{dayPlan.flight.aircraft}</span></div></div>
+              </div>
+            )}
+            
+            <div className="flex justify-end mb-2">
+               {editingId && <button onClick={() => setEditingId(null)} className="text-xs bg-sabah-blue text-white px-3 py-1 rounded-full shadow-sm">完成編輯</button>}
             </div>
-        `;
-    },
 
-    renderWallet: function() {
-        const { expenses, wallet } = this.state;
-        const filtered = wallet.filterUser ? expenses.filter(e => e.payer === wallet.filterUser) : expenses;
-        const totalTWD = filtered.reduce((sum, e) => sum + e.amountTWD, 0);
-        const totalMYR = filtered.reduce((sum, e) => sum + e.amountMYR, 0);
-
-        // Split Logic
-        const splitExpenses = expenses.filter(e => e.isSplit);
-        const totalSplitCost = splitExpenses.reduce((sum, e) => sum + e.amountTWD, 0);
-        const jiaPaid = splitExpenses.filter(e => e.payer === 'JIA').reduce((sum, e) => sum + e.amountTWD, 0);
-        const diff = jiaPaid - (totalSplitCost / 2);
-        const debtor = diff > 0 ? 'KIA' : 'JIA';
-        const creditor = diff > 0 ? 'JIA' : 'KIA';
-        const debtAmount = Math.abs(diff);
-
-        return `
-        <div class="font-sans h-full flex flex-col pt-safe">
-            <!-- Cards -->
-            <div class="sticky top-0 z-30 bg-sabah-bg/95 backdrop-blur-xl px-6 pb-4 border-b border-gray-100/50 shadow-sm pt-4">
-                <div class="flex overflow-x-auto gap-4 pb-1 -mx-2 px-2 snap-x no-scrollbar">
-                    
-                    <!-- Total -->
-                    <div class="min-w-[100%] snap-center bg-sabah-dark rounded-[32px] p-6 text-white shadow-xl relative overflow-hidden flex flex-col justify-between">
-                         <div class="absolute -top-10 -right-10 w-48 h-48 bg-sabah-blue rounded-full blur-3xl opacity-20"></div>
-                         <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-sabah-orange rounded-full blur-3xl opacity-10"></div>
-                         <div class="relative z-10">
-                            <div class="flex justify-between items-start mb-2">
-                                <h2 class="text-gray-400 text-xs font-bold uppercase tracking-widest">總支出</h2>
-                                <div class="flex gap-1.5">
-                                    <button onclick="App.setWalletState('filterUser', null)" class="h-8 px-3 rounded-full text-[10px] font-bold border transition-all ${wallet.filterUser === null ? 'bg-white/20 border-white text-white' : 'border-gray-600 text-gray-400'}">ALL</button>
-                                    <button onclick="App.setWalletState('filterUser', 'JIA')" class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold border transition-all ${wallet.filterUser === 'JIA' ? 'bg-sabah-blue border-sabah-blue text-white' : 'border-gray-600 text-gray-400'}">JIA</button>
-                                    <button onclick="App.setWalletState('filterUser', 'KIA')" class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold border transition-all ${wallet.filterUser === 'KIA' ? 'bg-sabah-orange border-sabah-orange text-white' : 'border-gray-600 text-gray-400'}">KIA</button>
-                                </div>
+            <div className="space-y-2">
+              {dayPlan.items.map((item, index) => (
+                <div key={item.id} onDragEnter={(e) => handleDragEnter(e, index)} onDragOver={(e) => e.preventDefault()} onDrop={handleDragEnd}>
+                   <div className="flex gap-4">
+                      <div className="flex flex-col items-center pt-1">
+                        <div className={`w-12 h-12 rounded-[18px] flex items-center justify-center shadow-sm z-10 ${item.type==='food'?'bg-sabah-orange text-white':item.type==='relax'?'bg-sabah-green text-white':item.type==='transport'?'bg-sabah-yellow text-sabah-dark':'bg-sabah-blue text-white'}`}>
+                          <span className="text-[11px] font-bold font-serif tracking-wider">{item.time}</span>
+                        </div>
+                      </div>
+                      <div 
+                        className={`flex-1 bg-white/85 backdrop-blur-md rounded-[24px] p-5 shadow-card border transition-all duration-300 flex flex-col gap-1 relative overflow-hidden select-none ${editingId === item.id ? 'border-sabah-blue ring-2 ring-sabah-blue/20' : 'border-white/40'}`}
+                        onTouchStart={() => startLongPress(item.id)} onTouchEnd={cancelLongPress} onMouseDown={() => startLongPress(item.id)} onMouseUp={cancelLongPress} onMouseLeave={cancelLongPress}
+                      >
+                         {pressProgress > 0 && <div className="absolute top-0 left-0 h-1 bg-sabah-blue transition-all duration-100 ease-linear" style={{ width: `${pressProgress}%` }}></div>}
+                         <div className="flex gap-4">
+                            <div className="cursor-grab text-gray-300" draggable onDragStart={(e) => handleDragStart(e, index)} onMouseDown={e=>e.stopPropagation()}><GripVertical size={20} /></div>
+                            <div className="flex-1">
+                               <div className="flex items-center gap-1.5 text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-2"><Clock size={10} />{item.type}</div>
+                               <h3 className="text-lg font-serif font-bold text-sabah-dark mb-2 leading-tight">{item.activity}</h3>
+                               <a href={item.coords.url} target="_blank" className="flex items-start gap-1.5 text-gray-500 text-xs hover:text-sabah-blue transition-colors mb-2"><MapPin size={12} className="mt-0.5" />{item.location}</a>
                             </div>
-                            <div class="flex items-baseline gap-2 mb-6">
-                                <span class="text-lg font-serif text-gray-400">NT$</span>
-                                <span class="text-4xl font-sans font-bold tracking-tight">${totalTWD.toLocaleString(undefined, {maximumFractionDigits:0})}</span>
-                            </div>
-                            <div class="bg-white/10 rounded-2xl p-4 flex items-center justify-between backdrop-blur-md">
-                                <div class="flex flex-col">
-                                    <span class="text-[10px] text-gray-400 uppercase font-bold">馬幣 MYR</span>
-                                    <span class="font-mono text-xl font-medium text-sabah-yellow">RM ${totalMYR.toLocaleString()}</span>
+                            {(editingId === item.id || item.imageUrl) && (
+                                <div className="w-20 h-20 flex-shrink-0 rounded-2xl shadow-sm border border-white bg-gray-50 overflow-hidden">
+                                    {editingId === item.id ? <EditableImage src={item.imageUrl} alt={item.activity} onImageChange={(s) => handleSaveImage(item.id, s)} className="w-full h-full" placeholderIcon={<Pencil size={20}/>} /> : <img src={item.imageUrl} className="w-full h-full object-cover" />}
                                 </div>
-                                <div class="h-8 w-[1px] bg-white/20"></div>
-                                <div class="flex flex-col text-right">
-                                    <span className="text-[10px] text-gray-400 uppercase font-bold">匯率估算</span>
-                                    <span className="font-mono text-xs">1 ≈ ${EXCHANGE_RATE} TWD</span>
-                                </div>
-                            </div>
+                            )}
                          </div>
-                         <div class="flex justify-end mt-2 items-center gap-1 opacity-50 text-[10px]">
-                            <span>向右滑動查看分帳</span> <i data-lucide="arrow-right" width="10"></i>
-                        </div>
-                    </div>
-
-                    <!-- Split -->
-                    <div class="min-w-[100%] snap-center bg-white rounded-[32px] p-6 text-sabah-dark shadow-xl border border-gray-100 flex flex-col justify-between">
-                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-gray-400 text-xs font-bold uppercase tracking-widest">分帳即時回饋</h2>
-                            <div class="bg-sabah-green/10 text-sabah-green p-2 rounded-full"><i data-lucide="users" width="18"></i></div>
-                         </div>
-                         ${debtAmount < 1 ? 
-                            `<div class="flex flex-col items-center justify-center py-4 text-gray-400 font-bold">目前結清</div>` : 
-                            `<div class="flex flex-col items-center justify-center py-2">
-                                <div class="flex items-center gap-4 mb-2 w-full justify-between px-4">
-                                    <div class="text-center">
-                                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold border-4 mx-auto mb-1 ${debtor === 'JIA' ? 'bg-sabah-blue text-white' : 'bg-sabah-orange text-white'}">${debtor}</div>
-                                        <span class="text-xs font-bold text-gray-400">需支付</span>
+                         {item.options && (
+                             <div className="flex overflow-x-auto gap-4 pb-2 -mx-2 px-2 snap-x no-scrollbar mt-2">
+                                {item.options.map((opt, idx) => (
+                                    <div key={idx} className="min-w-[85%] snap-center bg-white/85 backdrop-blur-md rounded-[24px] p-4 shadow-card border border-white/40 flex gap-3">
+                                        <div className="flex-1"><h3 className="text-base font-serif font-bold text-sabah-dark mb-1">{opt.activity}</h3><span className="text-[10px] text-gray-500">{opt.location}</span></div>
+                                        <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0"><img src={opt.imageUrl} className="w-full h-full object-cover"/></div>
                                     </div>
-                                    <div class="flex-1 flex flex-col items-center">
-                                        <span class="text-xs text-gray-400 mb-1">給予</span>
-                                        <div class="h-[2px] w-full bg-gray-200"></div>
-                                        <span class="font-mono font-bold text-xl mt-1 text-sabah-dark">NT$ ${debtAmount.toFixed(0)}</span>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold border-4 mx-auto mb-1 ${creditor === 'JIA' ? 'bg-sabah-blue text-white' : 'bg-sabah-orange text-white'}">${creditor}</div>
-                                        <span class="text-xs font-bold text-gray-400">收款</span>
-                                    </div>
-                                </div>
-                            </div>`
-                         }
-                    </div>
-
+                                ))}
+                             </div>
+                         )}
+                         {(editingId === item.id || item.notes) && (
+                            <div className={`mt-2 p-3 rounded-xl border ${editingId === item.id ? 'bg-white border-sabah-blue/50' : 'bg-white/50 border-gray-100/50'}`}>
+                                {editingId === item.id ? (
+                                    <textarea value={item.notes || ''} onChange={(e) => handleSaveNote(item.id, e.target.value)} className="w-full text-xs bg-transparent outline-none h-16" placeholder="輸入備註..." />
+                                ) : <p className="text-xs text-gray-500">💡 {item.notes}</p>}
+                            </div>
+                         )}
+                      </div>
+                   </div>
+                   {item.travelTime && index < dayPlan.items.length - 1 && <div className="flex items-center gap-2 ml-[18px] h-10 border-l-[2px] border-dashed border-gray-300 pl-4 relative my-1"><div className="absolute left-[-5px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-gray-300"></div><div className="flex items-center gap-1.5 bg-white/70 backdrop-blur px-2 py-1 rounded-full border border-gray-100 shadow-sm"><ArrowDown size={10} className="text-gray-400" /><span className="text-[10px] font-bold text-gray-500">{item.travelTime}</span></div></div>}
                 </div>
+              ))}
             </div>
+          </div>
+        );
+      };
 
-            <div class="flex-1 px-6 pb-24 pt-4">
-                 <!-- Form -->
-                 <div class="bg-white rounded-[24px] p-5 shadow-card mb-8">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-sabah-dark font-serif font-bold text-lg">新增紀錄</h3>
-                        <div class="bg-sabah-bg px-2 py-1 rounded-md text-[10px] font-bold text-sabah-blue">自動換算</div>
-                    </div>
-                    <div class="bg-sabah-bg rounded-2xl p-4 mb-4 flex items-center gap-4">
-                        <div class="flex-1">
-                             <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">MYR 金額</label>
-                             <div class="flex items-baseline gap-1">
-                                <span class="text-sabah-dark font-bold">RM</span>
-                                <input id="ex-amount" type="number" class="w-full bg-transparent text-2xl font-bold outline-none" placeholder="0">
-                             </div>
-                        </div>
-                    </div>
-                    <input id="ex-desc" type="text" placeholder="消費項目說明" class="w-full bg-white border-b-2 border-gray-100 p-3 text-sm mb-4 outline-none focus:border-sabah-yellow">
-                    
-                    <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar py-1">
-                        ${['food', 'transport', 'shopping', 'stay', 'other'].map(cat => `
-                            <button onclick="App.setWalletState('cat', '${cat}')" class="flex-shrink-0 px-3 py-1.5 rounded-full flex items-center gap-1.5 border transition-all ${wallet.cat === cat ? 'bg-sabah-dark text-white border-sabah-dark' : 'bg-white text-gray-400 border-gray-100'}">
-                                <span class="text-[10px] font-bold">${cat === 'food' ? '餐飲' : cat === 'transport' ? '交通' : cat === 'shopping' ? '購物' : cat === 'stay' ? '住宿' : '其他'}</span>
-                            </button>
-                        `).join('')}
-                    </div>
+      // --- MapComponent (Pure Leaflet to avoid React-Leaflet Context issues) ---
+      const MapComponent = ({ dayPlans, selectedDate }) => {
+        const mapRef = useRef(null);
+        const mapInstance = useRef(null);
+        const markersRef = useRef([]);
 
-                    <div class="flex gap-3 mb-6">
-                        <div class="flex bg-sabah-bg rounded-xl p-1">
-                            <button onclick="App.setWalletState('payer', 'JIA')" class="px-3 py-2 rounded-lg text-xs font-bold transition-all ${wallet.payer === 'JIA' ? 'bg-sabah-blue text-white shadow-sm' : 'text-gray-400'}">JIA</button>
-                            <button onclick="App.setWalletState('payer', 'KIA')" class="px-3 py-2 rounded-lg text-xs font-bold transition-all ${wallet.payer === 'KIA' ? 'bg-sabah-orange text-white shadow-sm' : 'text-gray-400'}">KIA</button>
-                        </div>
-                        <div class="flex bg-sabah-bg rounded-xl p-1">
-                            <button onclick="App.setWalletState('method', 'cash')" class="px-3 py-2 rounded-lg transition-all ${wallet.method === 'cash' ? 'bg-white text-sabah-dark shadow-sm' : 'text-gray-400'}"><i data-lucide="banknote" width="16"></i></button>
-                            <button onclick="App.setWalletState('method', 'card')" class="px-3 py-2 rounded-lg transition-all ${wallet.method === 'card' ? 'bg-white text-sabah-dark shadow-sm' : 'text-gray-400'}"><i data-lucide="credit-card" width="16"></i></button>
-                        </div>
-                        <button onclick="App.setWalletState('split', !App.state.wallet.split)" class="flex-1 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition-all border ${wallet.split ? 'bg-sabah-green/10 text-sabah-green border-sabah-green' : 'bg-transparent text-gray-400 border-gray-200'}">
-                            <i data-lucide="users" width="14"></i> 分帳
-                        </button>
-                    </div>
-
-                    <button onclick="App.addExpense(event)" class="w-full bg-sabah-yellow text-sabah-dark font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2">
-                        <i data-lucide="plus" width="18"></i> 加入錢包
-                    </button>
-                 </div>
-
-                 <!-- List -->
-                 <h3 class="text-sabah-dark font-serif font-bold text-lg mb-4 pl-1">近期消費</h3>
-                 <div class="space-y-3">
-                    ${[...filtered].reverse().map(exp => `
-                        <div class="relative bg-white p-4 rounded-2xl shadow-card flex items-center justify-between group">
-                             <div class="flex items-center gap-3">
-                                <div class="flex flex-col items-center gap-1">
-                                     <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-500">
-                                        <i data-lucide="${exp.category === 'food' ? 'coffee' : exp.category === 'transport' ? 'car' : exp.category === 'shopping' ? 'shopping-bag' : exp.category === 'stay' ? 'home' : 'wallet'}" width="18"></i>
-                                     </div>
-                                     ${exp.isSplit ? '<div class="bg-sabah-green/10 text-sabah-green text-[8px] px-1.5 py-0.5 rounded-full font-bold">分帳</div>' : ''}
-                                </div>
-                                <div>
-                                    <p class="font-serif font-bold text-sabah-dark text-sm">${exp.description}</p>
-                                    <div class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase mt-0.5">
-                                        <span class="${exp.payer === 'JIA' ? 'text-sabah-blue' : 'text-sabah-orange'}">${exp.payer}</span>
-                                        <span>•</span>
-                                        <span>${exp.paymentMethod === 'cash' ? '現金' : '信用卡'}</span>
-                                    </div>
-                                </div>
-                             </div>
-                             <div class="text-right">
-                                <p class="font-bold text-sabah-dark">RM ${exp.amountMYR}</p>
-                                <p class="text-xs text-gray-400 font-serif">NT$ ${exp.amountTWD.toFixed(0)}</p>
-                             </div>
-                             <button onclick="App.deleteExpense('${exp.id}')" class="absolute right-4 top-1/2 -translate-y-1/2 bg-red-500 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
-                                <i data-lucide="trash-2" width="16"></i>
-                             </button>
-                        </div>
-                    `).join('')}
-                    ${filtered.length === 0 ? '<div class="text-center py-10 text-gray-300 text-sm italic">尚無消費紀錄</div>' : ''}
-                 </div>
-            </div>
-        </div>
-        `;
-    },
-
-    renderShopping: function() {
-        const { locations, items, isLocationsExpanded } = this.state.shopping;
+        const activePlan = dayPlans.find(d => d.date === selectedDate);
         
-        return `
-        <div class="px-6 pt-safe pb-32 animate-fade-in">
-             <h2 class="text-3xl font-serif font-bold text-sabah-dark mb-6 mt-6">購物清單</h2>
-             
-             <!-- Warning -->
-             <div class="bg-red-50/90 border border-red-100 rounded-[20px] p-5 mb-8 shadow-sm">
-                <div class="flex items-center gap-2 mb-3 text-red-600">
-                    <i data-lucide="alert-triangle" width="20"></i>
-                    <h3 class="font-bold text-sm">入境台灣注意事項 (非常重要！)</h3>
-                </div>
-                <div class="space-y-3">
-                    <div><span class="text-xs font-bold text-red-500 block mb-0.5">肉類製品：嚴禁！</span><p class="text-[10px] text-gray-600 leading-relaxed">任何豬肉製品。建議盡量避免帶任何肉類。</p></div>
-                    <div><span class="text-xs font-bold text-red-500 block mb-0.5">新鮮水果：不能帶！</span><p class="text-[10px] text-gray-600 leading-relaxed">榴槤、山竹都<span class="font-bold underline">不能</span>帶回台灣。</p></div>
-                </div>
-             </div>
-
-             <!-- Locations -->
-             <section class="mb-10">
-                <div onclick="App.toggleShoppingLocations()" class="flex justify-between items-center mb-4 cursor-pointer select-none">
-                    <div class="flex items-center gap-2">
-                        <h3 class="text-lg font-serif font-bold text-sabah-dark flex items-center gap-2">
-                            <i data-lucide="map-pin" width="18" class="text-sabah-blue"></i> 購物地點
-                        </h3>
-                        <i data-lucide="${isLocationsExpanded ? 'chevron-up' : 'chevron-down'}" width="16" class="text-gray-400"></i>
-                    </div>
-                </div>
-                ${isLocationsExpanded ? `
-                <div class="flex flex-col gap-3 animate-fade-in">
-                    ${locations.map(loc => `
-                        <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-card border border-white/50 overflow-hidden p-4 flex justify-between gap-4">
-                            <div class="flex flex-col justify-start flex-1 min-w-0">
-                                <div class="flex items-baseline gap-2 mb-1 flex-wrap">
-                                    <h4 class="font-bold text-sabah-dark text-base">${loc.name}</h4>
-                                    <span class="text-[10px] text-sabah-blue font-bold uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded-md whitespace-nowrap">${loc.type}</span>
-                                </div>
-                                <p class="text-xs text-gray-500 leading-relaxed mb-3">${loc.description}</p>
-                                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.googleMapQuery)}" target="_blank" class="inline-flex items-center gap-1.5 bg-sabah-dark text-white text-[10px] font-bold px-3 py-2 rounded-lg self-start">
-                                    <i data-lucide="map-pin" width="12"></i> 前往 Google Maps
-                                </a>
-                            </div>
-                            <div class="w-20 h-20 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100 shadow-sm self-start">
-                                <img src="${loc.imageUrl}" class="w-full h-full object-cover">
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>` : ''}
-             </section>
-
-             <!-- Items -->
-             <section>
-                <h3 class="text-lg font-serif font-bold text-sabah-dark flex items-center gap-2 mb-4">
-                    <i data-lucide="star" width="18" class="text-sabah-yellow"></i> 必買清單
-                </h3>
-                <div class="grid grid-cols-2 gap-4">
-                    ${items.map(item => `
-                        <div onclick="App.openShoppingItemModal('${item.id}')" class="bg-white/90 backdrop-blur-sm rounded-2xl p-3 shadow-card border border-white/50 flex flex-col h-full cursor-pointer active:scale-[0.98] transition-transform">
-                            <div class="aspect-square bg-gray-100 rounded-xl mb-3 overflow-hidden border border-gray-100 relative">
-                                <img src="${item.imageUrl}" class="w-full h-full object-cover">
-                                ${item.rating > 0 ? `<div class="absolute top-1 right-1 bg-white/90 backdrop-blur-md px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm"><i data-lucide="star" width="8" class="text-sabah-yellow fill-sabah-yellow"></i><span class="text-[8px] font-bold">${item.rating}</span></div>` : ''}
-                            </div>
-                            <h4 class="font-bold text-sabah-dark text-xs mb-1 line-clamp-1">${item.name}</h4>
-                            <p class="text-[10px] text-gray-500 mb-2 leading-tight line-clamp-2 flex-grow">${item.description}</p>
-                            ${item.priceEstimate ? `<div class="text-[10px] font-bold text-sabah-blue bg-blue-50 px-2 py-1 rounded-md self-start">${item.priceEstimate}</div>` : ''}
-                        </div>
-                    `).join('')}
-                </div>
-             </section>
-        </div>
-        `;
-    },
-
-    renderInfo: function() {
-        const { checklist } = this.state.info;
-        return `
-        <div class="px-6 pt-safe pb-24 animate-fade-in space-y-4">
-            <h2 className="text-3xl font-serif font-bold text-sabah-dark mb-6 mt-6">旅遊資訊</h2>
-
-            <div class="bg-white/90 backdrop-blur-sm p-5 rounded-[24px] shadow-card border border-white/50">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="p-2 bg-gray-100 text-sabah-dark rounded-full"><i data-lucide="file-text" width="20" class="text-sabah-blue"></i></div>
-                    <h3 class="font-bold text-sabah-dark">1. 入境與簽證 (必辦！)</h3>
-                </div>
-                <div class="text-sm text-gray-600 leading-relaxed font-sans space-y-2">
-                    <p><strong class="text-sabah-dark">電子入境卡 (MDAC)：</strong> 雖免簽但強制填寫。</p>
-                    <ul class="list-disc pl-4 space-y-1">
-                        <li><strong class="text-gray-500">時間：</strong> 抵達前 3天內 (含當日)。</li>
-                        <li><strong class="text-gray-500">方式：</strong> 填寫後檢查 Email，截圖備查。</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- More info cards could go here similar to React structure -->
-
-            <div class="bg-sabah-dark text-white p-5 rounded-[24px] shadow-lg">
-                <h3 class="font-bold font-serif text-lg mb-4 flex items-center gap-2">
-                    <i data-lucide="check" width="20" class="text-sabah-green"></i> 出發前最後檢查 List
-                </h3>
-                <div class="space-y-2 mb-4">
-                    ${checklist.map(item => `
-                        <div class="flex items-start gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm group">
-                            <button onclick="App.toggleChecklist(${item.id})" class="w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 ${item.checked ? 'bg-sabah-green border-sabah-green text-white' : 'bg-transparent border-gray-300'}">
-                                ${item.checked ? '<i data-lucide="check" width="14"></i>' : ''}
-                            </button>
-                            <span class="text-sm flex-1 ${item.checked ? 'text-gray-400 line-through' : 'text-sabah-dark'}">${item.text}</span>
-                            <button onclick="App.deleteChecklistItem(${item.id})" class="text-gray-300 hover:text-red-400"><i data-lucide="trash-2" width="16"></i></button>
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="flex gap-2">
-                    <input id="new-check-item" type="text" placeholder="新增項目..." class="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-400 outline-none">
-                    <button onclick="App.addChecklistItem()" class="bg-sabah-blue text-white p-3 rounded-xl"><i data-lucide="plus" width="20"></i></button>
-                </div>
-            </div>
-        </div>
-        `;
-    },
-
-    // --- MAP LOGIC ---
-    initMap: function() {
-        if (this.mapInstance) {
-            this.mapInstance.remove();
-            this.mapInstance = null;
-        }
-
-        const mapContainer = document.getElementById('map-container');
-        if (!mapContainer) return;
-
-        const day = this.state.itinerary.find(d => d.date === this.state.selectedDate);
-        // Default JQ
-        const defaultCenter = [5.9904, 116.0798];
-        
-        const map = L.map('map-container', { zoomControl: false }).setView(defaultCenter, 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: 'OpenStreetMap'
-        }).addTo(map);
-
-        // Icons
-        const customIcon = L.icon({
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        // Custom Icons
+        const createIcon = (color, isUser) => L.divIcon({
+            className: 'custom-pin',
+            html: `<div style="background-color:${color};width:${isUser?18:16}px;height:${isUser?18:16}px;border:${isUser?3:3}px solid white;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>`,
+            iconSize: [16, 16]
         });
 
         const houseIcon = L.divIcon({
             className: 'custom-house-icon',
-            html: `<div><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>`,
-            iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -34]
+            html: `<div style="background-color:#F26B3A;width:32px;height:32px;border-radius:50%;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;color:white;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -34]
         });
 
-        // Markers
-        const bounds = [];
-        
-        // Accommodation (Persistent)
-        const jqMarker = L.marker(defaultCenter, { icon: houseIcon }).addTo(map)
-            .bindPopup(`<b>住宿：Jesselton Quay</b><br><a href="https://maps.google.com/?q=${defaultCenter[0]},${defaultCenter[1]}" target="_blank">Google Maps</a>`);
-        bounds.push(defaultCenter);
-
-        // Itinerary Markers
-        day.items.forEach(item => {
-            const addMarker = (lat, lng, title, locName) => {
-                L.marker([lat, lng], { icon: customIcon }).addTo(map)
-                    .bindPopup(`<b>${title}</b><br><span style="font-size:10px;color:gray">${locName}</span><br><a href="https://maps.google.com/?q=${lat},${lng}" target="_blank">Google Maps</a>`);
-                bounds.push([lat, lng]);
-            };
-
-            addMarker(item.coords.lat, item.coords.lng, item.activity, item.location);
-            
-            if(item.options) {
-                item.options.forEach(opt => addMarker(opt.coords.lat, opt.coords.lng, opt.activity, opt.location));
+        useEffect(() => {
+            if (!mapInstance.current && mapRef.current) {
+                mapInstance.current = L.map(mapRef.current, { zoomControl: false }).setView([5.9904, 116.0798], 13);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: 'OSM' }).addTo(mapInstance.current);
             }
-        });
+            
+            // Clear existing markers
+            markersRef.current.forEach(m => m.remove());
+            markersRef.current = [];
 
-        if (bounds.length > 0) {
-            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
-        }
+            if (!activePlan || !mapInstance.current) return;
 
-        this.mapInstance = map;
-    }
-};
+            const bounds = L.latLngBounds([]);
 
-// Initialize App
-document.addEventListener('DOMContentLoaded', () => {
-    App.init();
-});
+            // Add Accommodation
+            const accMarker = L.marker([5.9904, 116.0798], { icon: houseIcon }).addTo(mapInstance.current).bindPopup('<b>住宿: Jesselton Quay</b>');
+            markersRef.current.push(accMarker);
+            bounds.extend([5.9904, 116.0798]);
 
-</script>
-<script type="module" src="/index.tsx"></script>
+            // Add Items
+            activePlan.items.forEach(item => {
+                const addM = (lat, lng, title) => {
+                    const m = L.marker([lat, lng], { icon: createIcon('#F26B3A', false) }).addTo(mapInstance.current).bindPopup(`<b>${title}</b>`);
+                    markersRef.current.push(m);
+                    bounds.extend([lat, lng]);
+                };
+                if (item.coords) addM(item.coords.lat, item.coords.lng, item.activity);
+                if (item.options) item.options.forEach(opt => addM(opt.coords.lat, opt.coords.lng, opt.activity));
+            });
+
+            if (markersRef.current.length > 0) {
+                mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
+            }
+
+            // Cleanup on unmount or date change not needed for map instance, but marker clearing is handled
+        }, [activePlan]);
+
+        return (
+            <div className="w-full h-full relative z-0">
+                <div ref={mapRef} className="w-full h-full" />
+                <div className="absolute top-4 left-4 right-4 z-[400] pointer-events-none">
+                    <div className="bg-white/90 backdrop-blur-md p-4 rounded-[20px] shadow-soft border border-white/50 flex justify-between items-center">
+                        <div><h3 className="font-bold text-sabah-dark text-sm font-serif">今日地圖</h3><p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{markersRef.current.length} 個地點</p></div>
+                        <div className="bg-sabah-blue/10 p-2 rounded-full text-sabah-blue"><MapIcon size={20} /></div>
+                    </div>
+                </div>
+            </div>
+        );
+      };
+
+      // --- ExpenseTracker ---
+      const ExpenseTracker = ({ expenses, onAddExpense, onDeleteExpense }) => {
+        const [amount, setAmount] = useState('');
+        const [desc, setDesc] = useState('');
+        const [cat, setCat] = useState('food');
+        const [payer, setPayer] = useState('JIA');
+        const [method, setMethod] = useState('cash');
+        const [isSplit, setIsSplit] = useState(false);
+        const [filter, setFilter] = useState(null);
+
+        const filtered = filter ? expenses.filter(e => e.payer === filter) : expenses;
+        const totalTWD = filtered.reduce((s, e) => s + e.amountTWD, 0);
+        const totalMYR = filtered.reduce((s, e) => s + e.amountMYR, 0);
+
+        const splitData = useMemo(() => {
+            const splits = expenses.filter(e => e.isSplit);
+            const total = splits.reduce((s, e) => s + e.amountTWD, 0);
+            const jiaPaid = splits.filter(e => e.payer === 'JIA').reduce((s, e) => s + e.amountTWD, 0);
+            const diff = jiaPaid - (total / 2);
+            return { debtor: diff > 0 ? 'KIA' : 'JIA', creditor: diff > 0 ? 'JIA' : 'KIA', amount: Math.abs(diff) };
+        }, [expenses]);
+
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            const val = parseFloat(amount);
+            if (!val || !desc) return;
+            onAddExpense({ id: Date.now().toString(), amountMYR: val, amountTWD: val * EXCHANGE_RATE, category: cat, description: desc, date: new Date().toISOString().split('T')[0], time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false}), payer, paymentMethod: method, isSplit });
+            setAmount(''); setDesc('');
+        };
+
+        return (
+            <div className="flex flex-col h-full font-sans">
+                <div className="sticky top-0 z-30 bg-sabah-bg/95 backdrop-blur-xl pt-safe px-6 pb-4 border-b border-gray-100/50 shadow-sm">
+                   <div className="flex overflow-x-auto gap-4 pb-1 -mx-2 px-2 snap-x no-scrollbar pt-2">
+                       <div className="min-w-[100%] snap-center bg-sabah-dark rounded-[32px] p-6 text-white shadow-xl relative overflow-hidden">
+                           <div className="flex justify-between items-start mb-2"><h2 className="text-gray-400 text-xs font-bold uppercase tracking-widest">總支出</h2><div className="flex gap-1"><button onClick={()=>setFilter(null)} className={`px-2 py-0.5 rounded text-[10px] border ${!filter?'bg-white text-sabah-dark':'border-gray-600'}`}>ALL</button><button onClick={()=>setFilter('JIA')} className={`px-2 py-0.5 rounded text-[10px] border ${filter==='JIA'?'bg-sabah-blue border-sabah-blue':'border-gray-600'}`}>JIA</button><button onClick={()=>setFilter('KIA')} className={`px-2 py-0.5 rounded text-[10px] border ${filter==='KIA'?'bg-sabah-orange border-sabah-orange':'border-gray-600'}`}>KIA</button></div></div>
+                           <span className="text-4xl font-sans font-bold tracking-tight">NT$ {totalTWD.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+                           <div className="mt-4 text-xs text-gray-400">MYR {totalMYR.toLocaleString()}</div>
+                       </div>
+                       <div className="min-w-[100%] snap-center bg-white rounded-[32px] p-6 text-sabah-dark shadow-xl border border-gray-100 flex flex-col justify-center">
+                           <div className="flex justify-between items-center mb-4"><h2 className="text-gray-400 text-xs font-bold uppercase tracking-widest">分帳結算</h2><Users size={18} className="text-sabah-green"/></div>
+                           {splitData.amount < 1 ? <div className="text-center font-bold text-gray-400">目前結清</div> : 
+                             <div className="flex items-center justify-between px-2">
+                                <div className="text-center"><div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white mb-1 ${splitData.debtor==='JIA'?'bg-sabah-blue':'bg-sabah-orange'}`}>{splitData.debtor}</div><span className="text-[10px] text-gray-400">支付</span></div>
+                                <div className="font-mono font-bold text-xl">NT$ {splitData.amount.toFixed(0)}</div>
+                                <div className="text-center"><div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white mb-1 ${splitData.creditor==='JIA'?'bg-sabah-blue':'bg-sabah-orange'}`}>{splitData.creditor}</div><span className="text-[10px] text-gray-400">收款</span></div>
+                             </div>}
+                       </div>
+                   </div>
+                </div>
+                <div className="flex-1 px-6 pb-24 pt-4">
+                    <form onSubmit={handleSubmit} className="bg-white rounded-[24px] p-5 shadow-card mb-8">
+                       <h3 className="text-sabah-dark font-serif font-bold text-lg mb-4">新增紀錄</h3>
+                       <div className="bg-sabah-bg rounded-2xl p-4 mb-4 flex items-center gap-4">
+                           <div className="flex-1"><span className="text-sabah-dark font-bold mr-1">RM</span><input type="number" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="0" className="bg-transparent text-2xl font-bold w-20 outline-none"/></div>
+                           <div className="text-right"><span className="text-[10px] text-gray-400">約 NT$</span> <span className="text-xl font-bold text-sabah-blue">{amount ? (parseFloat(amount)*EXCHANGE_RATE).toFixed(0) : '0'}</span></div>
+                       </div>
+                       <input type="text" value={desc} onChange={e=>setDesc(e.target.value)} placeholder="項目說明" className="w-full bg-white border-b-2 border-gray-100 p-3 text-sm mb-4 outline-none"/>
+                       <div className="grid grid-cols-5 gap-1 mb-4">{['food','transport','shopping','stay','other'].map(c=><button key={c} type="button" onClick={()=>setCat(c)} className={`py-2 rounded-xl text-[10px] font-bold border ${cat===c?'bg-sabah-dark text-white':'bg-white text-gray-400'}`}>{c}</button>)}</div>
+                       <div className="flex gap-3 mb-6">
+                           <div className="flex bg-sabah-bg rounded-xl p-1"><button type="button" onClick={()=>setPayer('JIA')} className={`px-3 py-2 rounded-lg text-xs font-bold ${payer==='JIA'?'bg-sabah-blue text-white':'text-gray-400'}`}>JIA</button><button type="button" onClick={()=>setPayer('KIA')} className={`px-3 py-2 rounded-lg text-xs font-bold ${payer==='KIA'?'bg-sabah-orange text-white':'text-gray-400'}`}>KIA</button></div>
+                           <button type="button" onClick={()=>setIsSplit(!isSplit)} className={`flex-1 rounded-xl flex items-center justify-center gap-2 text-xs font-bold border ${isSplit?'bg-sabah-green/10 text-sabah-green border-sabah-green':'text-gray-400 border-gray-200'}`}><Users size={14}/> 分帳</button>
+                       </div>
+                       <button type="submit" className="w-full bg-sabah-yellow text-sabah-dark font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2"><Plus size={18}/> 加入錢包</button>
+                    </form>
+                    <div className="space-y-3">
+                        {[...filtered].reverse().map(e => (
+                             <div key={e.id} className="bg-white p-4 rounded-2xl shadow-card flex items-center justify-between group relative">
+                                 <button onClick={()=>onDeleteExpense(e.id)} className="absolute right-4 top-4 text-red-400 opacity-0 group-hover:opacity-100"><Trash2 size={16}/></button>
+                                 <div className="flex items-center gap-3">
+                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-500`}><Coffee size={18}/></div>
+                                     <div><p className="font-serif font-bold text-sabah-dark text-sm">{e.description}</p><div className="flex gap-2 text-[10px] text-gray-400 font-bold uppercase mt-0.5"><span className={e.payer==='JIA'?'text-sabah-blue':'text-sabah-orange'}>{e.payer}</span><span>{e.date.slice(5)}</span></div></div>
+                                 </div>
+                                 <div className="text-right"><p className="font-bold text-sabah-dark">RM {e.amountMYR}</p><p className="text-xs text-gray-400">NT$ {e.amountTWD.toFixed(0)}</p></div>
+                             </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+      };
+
+      // --- ShoppingList ---
+      const ShoppingList = () => {
+        const [locs, setLocs] = useState(INITIAL_SHOPPING_LOCATIONS);
+        const [items, setItems] = useState(INITIAL_SHOPPING_ITEMS);
+        const [expanded, setExpanded] = useState(false);
+        const [selItem, setSelItem] = useState(null);
+
+        return (
+           <div className="px-6 pt-safe pb-32 animate-fade-in relative">
+               <h2 className="text-3xl font-serif font-bold text-sabah-dark mb-6 mt-6">購物清單</h2>
+               <div className="bg-red-50/90 border border-red-100 rounded-[20px] p-5 mb-8 shadow-sm">
+                   <div className="flex items-center gap-2 mb-3 text-red-600"><AlertTriangle size={20}/><h3 className="font-bold text-sm">入境注意事項</h3></div>
+                   <div className="text-[10px] text-gray-600 space-y-1"><p>❌ 肉類製品 (含泡麵)</p><p>❌ 新鮮水果 (榴槤)</p></div>
+               </div>
+               <div className="mb-10">
+                   <div onClick={()=>setExpanded(!expanded)} className="flex justify-between items-center mb-4 cursor-pointer"><h3 className="text-lg font-serif font-bold text-sabah-dark flex gap-2"><MapPin size={18} className="text-sabah-blue"/>購物地點</h3>{expanded?<ChevronUp size={16}/>:<ChevronDown size={16}/>}</div>
+                   {expanded && <div className="flex flex-col gap-3 animate-fade-in">{locs.map(l=><div key={l.id} className="bg-white/90 rounded-2xl p-4 border border-white/50 flex gap-4"><div className="flex-1"><h4 className="font-bold text-sabah-dark">{l.name}</h4><p className="text-xs text-gray-500">{l.description}</p></div><div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden"><img src={l.imageUrl} className="w-full h-full object-cover"/></div></div>)}</div>}
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                   {items.map(i=>(
+                       <div key={i.id} onClick={()=>setSelItem(i)} className="bg-white/90 rounded-2xl p-3 shadow-card border border-white/50 cursor-pointer">
+                           <div className="aspect-square bg-gray-100 rounded-xl mb-3 overflow-hidden"><img src={i.imageUrl} className="w-full h-full object-cover"/></div>
+                           <h4 className="font-bold text-sabah-dark text-xs mb-1 line-clamp-1">{i.name}</h4>
+                           <p className="text-[10px] text-gray-500 line-clamp-2">{i.description}</p>
+                       </div>
+                   ))}
+               </div>
+               <button className="fixed bottom-24 right-6 w-14 h-14 bg-sabah-blue text-white rounded-full shadow-lg flex items-center justify-center z-40"><Plus size={28}/></button>
+               {selItem && (
+                   <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={()=>setSelItem(null)}></div>
+                       <div className="bg-white rounded-[32px] p-6 w-full max-w-sm relative z-10 animate-[fadeIn_0.3s_ease-out]">
+                           <button onClick={()=>setSelItem(null)} className="absolute top-4 right-4"><X size={20} className="text-gray-500"/></button>
+                           <div className="aspect-[4/3] rounded-2xl bg-gray-100 overflow-hidden mb-5"><img src={selItem.imageUrl} className="w-full h-full object-cover"/></div>
+                           <h2 className="text-2xl font-serif font-bold text-sabah-dark mb-2">{selItem.name}</h2>
+                           <p className="text-sm text-gray-600 leading-relaxed">{selItem.description}</p>
+                       </div>
+                   </div>
+               )}
+           </div>
+        );
+      };
+
+      // --- InfoPage ---
+      const InfoPage = () => {
+         const [checklist, setChecklist] = useState([
+             {id:1, text:"護照 > 6個月", checked:false}, {id:2, text:"MDAC 入境卡", checked:false}, {id:3, text:"萬用轉接頭", checked:false}, {id:4, text:"Grab App", checked:false}
+         ]);
+         const [txt, setTxt] = useState("");
+         return (
+             <div className="px-6 pt-safe pb-24 animate-fade-in space-y-4">
+                 <h2 className="text-3xl font-serif font-bold text-sabah-dark mb-6 mt-6">旅遊資訊</h2>
+                 <div className="bg-white/90 p-5 rounded-[24px] shadow-card"><div className="flex gap-3 mb-3"><FileText className="text-sabah-blue"/><h3 className="font-bold">入境 & 簽證</h3></div><p className="text-sm text-gray-600">MDAC 必填。護照效期 > 6個月。</p></div>
+                 <div className="bg-white/90 p-5 rounded-[24px] shadow-card"><div className="flex gap-3 mb-3"><Plug className="text-blue-500"/><h3 className="font-bold">電壓 & 插座</h3></div><p className="text-sm text-gray-600">英規三孔 (Type G)。220V。</p></div>
+                 <div className="bg-sabah-dark text-white p-5 rounded-[24px]">
+                     <h3 className="font-bold mb-4 flex gap-2"><Check className="text-sabah-green"/> 出發檢查</h3>
+                     <div className="space-y-2 mb-4">
+                         {checklist.map(i=>(
+                             <div key={i.id} onClick={()=>setChecklist(p=>p.map(x=>x.id===i.id?{...x,checked:!x.checked}:x))} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 cursor-pointer">
+                                 <div className={`w-5 h-5 rounded border flex items-center justify-center ${i.checked?'bg-sabah-green border-sabah-green':'border-gray-300'}`}>{i.checked&&<Check size={14} className="text-white"/>}</div>
+                                 <span className={`text-sm text-sabah-dark ${i.checked?'line-through opacity-50':''}`}>{i.text}</span>
+                             </div>
+                         ))}
+                     </div>
+                     <div className="flex gap-2"><input value={txt} onChange={e=>setTxt(e.target.value)} placeholder="新增..." className="flex-1 bg-white/10 rounded-xl px-4 py-3 text-sm text-white"/><button onClick={()=>{if(txt)setChecklist(p=>[...p,{id:Date.now(),text:txt,checked:false}]);setTxt('')}} className="bg-sabah-blue p-3 rounded-xl"><Plus/></button></div>
+                 </div>
+             </div>
+         );
+      };
+
+      // --- App Root ---
+      const NavItem = ({ icon, label, isActive, onClick }) => (
+        <button onClick={onClick} className={`flex flex-col items-center gap-1 w-full ${isActive?'text-sabah-blue':'text-gray-400'}`}>
+           <div className={`p-1.5 rounded-2xl transition-all ${isActive?'bg-blue-50/80 scale-110 -translate-y-1':'bg-transparent'}`}>{React.cloneElement(icon, {size:24, strokeWidth:isActive?2.5:2})}</div>
+           <span className="text-[10px] font-bold">{label}</span>
+        </button>
+      );
+
+      const App = () => {
+        const [showSplash, setShowSplash] = useState(true);
+        const [activeTab, setActiveTab] = useState('plan');
+        const [dayPlans, setDayPlans] = useState(INITIAL_ITINERARY);
+        const [expenses, setExpenses] = useState([]);
+        const [selectedDate, setSelectedDate] = useState(INITIAL_ITINERARY[0].date);
+        const currentDayPlan = dayPlans.find(d => d.date === selectedDate) || dayPlans[0];
+
+        const handleUpdateDay = (updated) => setDayPlans(prev => prev.map(d => d.date === updated.date ? updated : d));
+
+        return (
+          <HashRouter>
+            {showSplash && (
+               <div onClick={()=>setShowSplash(false)} className="fixed inset-0 z-[100] cursor-pointer bg-black flex items-center justify-center">
+                  <img src="https://i.pinimg.com/736x/a1/68/29/a168297e14852587d40f2ac06dd2a1e5.jpg" className="absolute inset-0 w-full h-full object-cover opacity-90"/>
+                  <div className="relative z-10 text-white text-center"><h1 className="text-6xl font-serif font-black tracking-wider drop-shadow-2xl">SABAH</h1><p className="text-xs font-sans mt-8 opacity-70 animate-pulse">點擊開始</p></div>
+               </div>
+            )}
+            <div className="flex justify-center min-h-dvh bg-gray-900 font-sans text-sabah-dark">
+              <div className="w-full max-w-[480px] h-dvh relative shadow-2xl overflow-hidden flex flex-col bg-sabah-bg">
+                 <div className="absolute inset-0 z-0">
+                    {activeTab === 'plan' && <img src={currentDayPlan.bgImage} className="w-full h-full object-cover transition-opacity duration-700"/>}
+                    <div className="absolute inset-0 bg-white/30 backdrop-blur-[1px]"></div>
+                 </div>
+                 
+                 {activeTab === 'plan' && (
+                    <div className="relative z-20 bg-white/30 backdrop-blur-md shadow-sm border-b border-white/20 pb-2">
+                       <div className="pt-safe pb-1 text-center mb-2"><h2 className="text-2xl font-serif font-bold text-sabah-dark mt-3">Sabah | 亞庇海中遊</h2></div>
+                       <div className="flex items-center justify-between px-2">
+                           <div className="flex-1 overflow-hidden"><DateSelector days={dayPlans} selectedDate={selectedDate} onSelectDate={setSelectedDate} /></div>
+                           <div className="flex flex-col items-end pl-2 pr-4 gap-1 min-w-[80px]">
+                               <span className="bg-sabah-blue/90 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">MALAYSIA</span>
+                               <div className="flex items-center gap-1.5 bg-white/90 px-2 py-1 rounded-lg"><Sun size={14} className="text-sabah-yellow"/><div className="flex flex-col items-end leading-none"><span className="text-xs font-bold text-sabah-dark">{currentDayPlan.weatherTemp}°C</span><span className="text-[8px] text-gray-400">{currentDayPlan.weatherCondition}</span></div></div>
+                           </div>
+                       </div>
+                    </div>
+                 )}
+
+                 <main className={`flex-1 overflow-y-auto no-scrollbar relative z-10 ${activeTab==='map'?'h-full':''}`}>
+                    {activeTab === 'plan' && <ItineraryList dayPlan={currentDayPlan} onUpdate={handleUpdateDay} />}
+                    {activeTab === 'map' && <MapComponent dayPlans={dayPlans} selectedDate={selectedDate} />}
+                    {activeTab === 'wallet' && <ExpenseTracker expenses={expenses} onAddExpense={e=>setExpenses(p=>[...p,e])} onDeleteExpense={id=>setExpenses(p=>p.filter(x=>x.id!==id))} />}
+                    {activeTab === 'shopping' && <ShoppingList />}
+                    {activeTab === 'info' && <InfoPage />}
+                 </main>
+
+                 <nav className="relative z-50 bg-white/95 backdrop-blur-xl border-t border-gray-100 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+                    <div className="flex justify-between items-center px-4 py-2">
+                       <NavItem icon={<Calendar/>} label="行程" isActive={activeTab==='plan'} onClick={()=>setActiveTab('plan')}/>
+                       <NavItem icon={<MapIcon/>} label="地圖" isActive={activeTab==='map'} onClick={()=>setActiveTab('map')}/>
+                       <NavItem icon={<Wallet/>} label="記帳" isActive={activeTab==='wallet'} onClick={()=>setActiveTab('wallet')}/>
+                       <NavItem icon={<ShoppingBag/>} label="購物" isActive={activeTab==='shopping'} onClick={()=>setActiveTab('shopping')}/>
+                       <NavItem icon={<Info/>} label="資訊" isActive={activeTab==='info'} onClick={()=>setActiveTab('info')}/>
+                    </div>
+                 </nav>
+              </div>
+            </div>
+          </HashRouter>
+        );
+      };
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
 </body>
 </html>
