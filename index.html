@@ -232,8 +232,6 @@
         }
       ];
 
-      const INITIAL_EXPENSES = [];
-
       const INITIAL_SHOPPING_LOCATIONS = [
         { id: 'sl-1', name: 'Wisma Merdeka', description: '最佳換匯地點，也有賣紀念品', type: '換匯 & 紀念品', googleMapQuery: 'Wisma Merdeka Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1574902998399-56d11bd85721?q=80&w=500' },
         { id: 'sl-2', name: 'Imago Shopping Mall', description: '亞庇最大商場，必買 Padini, Bata, Fipper, Eureka', type: '購物中心', googleMapQuery: 'Imago Shopping Mall Kota Kinabalu', imageUrl: 'https://images.unsplash.com/photo-1519567241046-7f570eee3d9f?q=80&w=500' },
@@ -487,7 +485,7 @@
         );
       };
 
-      // --- MapComponent (Pure Leaflet to avoid React-Leaflet Context issues) ---
+      // --- MapComponent (Converted to raw Leaflet) ---
       const MapComponent = ({ dayPlans, selectedDate }) => {
         const mapRef = useRef(null);
         const mapInstance = useRef(null);
@@ -544,7 +542,6 @@
                 mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
             }
 
-            // Cleanup on unmount or date change not needed for map instance, but marker clearing is handled
         }, [activePlan]);
 
         return (
